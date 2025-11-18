@@ -4,45 +4,56 @@ import { useLanguage } from "@/lib/context/LanguageContext";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+const navigationDict = {
+  en: {
+    home: "Home",
+    about: "About Us",
+    contact: "Contact Us",
+    privacyPolicy: "Privacy Policy"
+  },
+  ar: {
+    home: "الرئيسية",
+    about: "من نحن",
+    contact: "اتصل بنا",
+    privacyPolicy: "سياسة الخصوصية"
+  },
+};
+
 const Header = () => {
   const { lang, toggleLanguage } = useLanguage();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
+    setIsMounted(true);
+    
     const handleScroll = () => {
       const isScrolled = window.scrollY > 10;
       setScrolled(isScrolled);
     };
 
+    // Only add event listener on client side
     window.addEventListener("scroll", handleScroll);
+    
+    // Set initial scroll state
+    handleScroll();
+    
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const dict = {
-    en: {
-      home: "Home",
-      about: "About Us",
-      contact: "Contact Us",
-    },
-    ar: {
-      home: "الرئيسية",
-      about: "من نحن",
-      contact: "اتصل بنا",
-    },
-  };
-
   const isActive = (path) => pathname === path;
 
+  // Don't render scroll-dependent classes during SSR
+  const headerClasses = `fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+    isMounted && scrolled
+      ? "bg-gray-900/95 backdrop-blur-md border-b border-gray-800/50 py-2 shadow-xl"
+      : "bg-gray-900/90 backdrop-blur-sm border-b border-gray-800/30 py-3"
+  }`;
+
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-gray-900/95 backdrop-blur-md border-b border-gray-800/50 py-2 shadow-xl"
-          : "bg-gray-900/90 backdrop-blur-sm border-b border-gray-800/30 py-3"
-      }`}
-    >
+    <header className={headerClasses}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -67,51 +78,64 @@ const Header = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link
-              href="/"
-              className={`transition-colors font-medium px-3 py-2 rounded-lg ${
-                isActive("/")
-                  ? "text-white bg-gray-800"
-                  : "text-gray-300 hover:text-white hover:bg-gray-800/50"
-              }`}
-            >
-              {dict[lang].home}
-            </Link>
-            <Link
-              href="/about"
-              className={`transition-colors font-medium px-3 py-2 rounded-lg ${
-                isActive("/about")
-                  ? "text-white bg-gray-800"
-                  : "text-gray-300 hover:text-white hover:bg-gray-800/50"
-              }`}
-            >
-              {dict[lang].about}
-            </Link>
-            <Link
-              href="/contact"
-              className={`transition-colors font-medium px-3 py-2 rounded-lg ${
-                isActive("/contact")
-                  ? "text-white bg-gray-800"
-                  : "text-gray-300 hover:text-white hover:bg-gray-800/50"
-              }`}
-            >
-              {dict[lang].contact}
-            </Link>
+<nav className="hidden md:flex items-center">
+  {/* Navigation Links */}
+  <div className={`flex items-center ${lang === "ar" ? "flex-row-reverse space-x-reverse" : "flex-row"} space-x-2`}>
+    <Link
+      href="/"
+      className={`transition-colors font-medium px-4 py-2 rounded-lg ${
+        isActive("/")
+          ? "text-white bg-gray-800 shadow-lg"
+          : "text-gray-300 hover:text-white hover:bg-gray-800/50"
+      }`}
+    >
+      {navigationDict[lang].home}
+    </Link>
+    <Link
+      href="/about"
+      className={`transition-colors font-medium px-4 py-2 rounded-lg ${
+        isActive("/about")
+          ? "text-white bg-gray-800 shadow-lg"
+          : "text-gray-300 hover:text-white hover:bg-gray-800/50"
+      }`}
+    >
+      {navigationDict[lang].about}
+    </Link>
+    <Link
+      href="/contact"
+      className={`transition-colors font-medium px-4 py-2 rounded-lg ${
+        isActive("/contact")
+          ? "text-white bg-gray-800 shadow-lg"
+          : "text-gray-300 hover:text-white hover:bg-gray-800/50"
+      }`}
+    >
+      {navigationDict[lang].contact}
+    </Link>
+    <Link
+      href="/privacy-policy"
+      className={`transition-colors font-medium px-4 py-2 rounded-lg ${
+        isActive("/privacy-policy")
+          ? "text-white bg-gray-800 shadow-lg"
+          : "text-gray-300 hover:text-white hover:bg-gray-800/50"
+      }`}
+    >
+      {navigationDict[lang].privacyPolicy}
+    </Link>
+  </div>
 
-            {/* Language Switcher */}
-            <div className="flex items-center ml-4">
-              <button
-                onClick={toggleLanguage}
-                className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors"
-                aria-label="Toggle language"
-              >
-                <span className="text-white font-medium">
-                  {lang === "en" ? "EN" : "AR"}
-                </span>
-              </button>
-            </div>
-          </nav>
+  {/* Language Switcher */}
+  <div className={`flex items-center ${lang === "ar" ? "mr-4" : "ml-4"}`}>
+    <button
+      onClick={toggleLanguage}
+      className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors shadow-lg hover:shadow-xl"
+      aria-label="Toggle language"
+    >
+      <span className="text-white font-medium">
+        {lang === "en" ? "EN" : "AR"}
+      </span>
+    </button>
+  </div>
+</nav>
 
           {/* Mobile menu button */}
           <button
@@ -153,7 +177,7 @@ const Header = () => {
               }`}
               onClick={() => setIsMenuOpen(false)}
             >
-              {dict[lang].home}
+              {navigationDict[lang].home}
             </Link>
             <Link
               href="/about"
@@ -164,7 +188,7 @@ const Header = () => {
               }`}
               onClick={() => setIsMenuOpen(false)}
             >
-              {dict[lang].about}
+              {navigationDict[lang].about}
             </Link>
             <Link
               href="/contact"
@@ -175,7 +199,18 @@ const Header = () => {
               }`}
               onClick={() => setIsMenuOpen(false)}
             >
-              {dict[lang].contact}
+              {navigationDict[lang].contact}
+            </Link>
+            <Link
+              href="/privacy-policy"
+              className={`transition-colors font-medium px-3 py-2 rounded-lg ${
+                isActive("/privacy-policy")
+                  ? "text-white bg-gray-800"
+                  : "text-gray-300 hover:text-white hover:bg-gray-800/50"
+              }`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              {navigationDict[lang].privacyPolicy}
             </Link>
 
             <div className="flex items-center justify-center pt-4 border-t border-gray-800">

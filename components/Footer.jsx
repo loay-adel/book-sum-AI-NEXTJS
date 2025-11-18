@@ -26,7 +26,7 @@ const Footer = () => {
         >
           {content[lang].poweredBy} • {content[lang].madeBy}{" "}
           <Link
-            href="mailto:loayadel@example.com"
+            href="mailto:loay-adel@outlook.com"
             className="text-blue-400 hover:text-blue-300 transition-colors underline"
           >
             Loay Adel
