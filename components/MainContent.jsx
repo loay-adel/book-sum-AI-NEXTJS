@@ -1,9 +1,15 @@
-import { MainContentClient } from "./MainContentClient";
+import Header from "./Header";
+import Footer from "./Footer";
+import { MainContentClient } from './MainContentClient';
 
-const MainContent = ({ initialLang = "en" }) => {
-
-  
-  return <MainContentClient initialLang={initialLang} />;
-};
-
-export default MainContent;
+export default function MainLayout({ children }) {
+  return (
+    <>
+      <Header />
+      <main className="min-h-screen">
+        <MainContentClient /> 
+      </main>
+      <Footer />
+    </>
+  );
+}

@@ -74,7 +74,7 @@ const Header = () => {
                 ></path>
               </svg>
             </div>
-            <span className="text-xl font-bold text-white">Bookwise</span>
+            <span className="text-xl font-bold text-white">book summarizer</span>
           </Link>
 
           {/* Desktop Navigation */}

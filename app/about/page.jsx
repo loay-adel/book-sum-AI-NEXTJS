@@ -1,4 +1,3 @@
-
 import { AboutContent } from "@/components/AboutContent";
 
 const AboutUs = () => {

@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Privacy Policy | Bookwise",
-  description: "Read our privacy policy to understand how we collect, use, and protect your data at Bookwise.",
+  title: "Privacy Policy | book summarizer",
+  description: "Read our privacy policy to understand how we collect, use, and protect your data at book summarizer.",
 };
 
 export default function PrivacyPolicyLayout({ children }) {

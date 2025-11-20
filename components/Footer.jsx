@@ -7,11 +7,11 @@ const Footer = () => {
 
   const content = {
     en: {
-      poweredBy: "Powered by Gemini",
+      poweredBy: "Powered by OpenAI",
       madeBy: "Made by",
     },
     ar: {
-      poweredBy: "مدعوم بـ Gemini",
+      poweredBy: "مدعوم بـ OpenAI",
       madeBy: "صنع بواسطة",
     },
   };
