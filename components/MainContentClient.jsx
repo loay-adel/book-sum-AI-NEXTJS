@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import ReactMarkdown from "react-markdown";
 import { motion, AnimatePresence } from "framer-motion";
-
+import { useUserData } from '@/lib/hooks/useUserData';
 import { ExternalLink } from 'lucide-react';
 // Static dictionary - moved outside component
 const contentDict = {
@@ -81,7 +81,13 @@ export const MainContentClient = ({ initialLang }) => {
   const [activeTab, setActiveTab] = useState("search");
   const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
-
+  
+  const { 
+    addSearch, 
+    saveSummary, 
+    searchHistory, 
+    savedSummaries 
+  } = useUserData();
   // Use your custom hooks
   const {
     results: searchResults,
@@ -114,14 +120,74 @@ export const MainContentClient = ({ initialLang }) => {
   const handleSearch = async (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      await searchBook(searchQuery);
+      const startTime = Date.now();
+      try {
+        await searchBook(searchQuery);
+        const responseTime = Date.now() - startTime;
+        
+        // Track successful search
+        await addSearch(
+          searchQuery, 
+          searchResults, 
+          true, 
+          responseTime
+        );
+      } catch (error) {
+        const responseTime = Date.now() - startTime;
+        // Track failed search
+        await addSearch(
+          searchQuery, 
+          null, 
+          false, 
+          responseTime
+        );
+      }
     }
   };
 
+  // Update your file upload handler
   const handleFileUpload = async (e) => {
     e.preventDefault();
     if (selectedFile) {
-      await uploadFile(selectedFile);
+      const startTime = Date.now();
+      try {
+        await uploadFile(selectedFile);
+        const responseTime = Date.now() - startTime;
+        
+        // Track PDF upload
+        await addSearch(
+          `PDF Upload: ${selectedFile.name}`,
+          uploadResults,
+          true,
+          responseTime
+        );
+      } catch (error) {
+        const responseTime = Date.now() - startTime;
+        await addSearch(
+          `PDF Upload: ${selectedFile.name}`,
+          null,
+          false,
+          responseTime
+        );
+      }
+    }
+  };
+
+  // Function to save summaries when viewing results
+  const handleSaveSummary = async (results, type = 'search') => {
+    if (results?.book && results?.summary) {
+      try {
+        await saveSummary(
+          results.book,
+          results.summary,
+          type,
+          results.amazonLink,
+          results.recommendations || []
+        );
+       
+      } catch (error) {
+        console.error('Failed to save summary:', error);
+      }
     }
   };
 
@@ -388,14 +454,30 @@ const renderResults = (results, loading, error, type, progress = 0, currentStep 
             ? dict[lang].searchResults
             : dict[lang].uploadResults}
         </h3>
-        <Button
-          onClick={clearResults}
-          variant="outline"
-          size="sm"
-          className="border-gray-600 text-gray-300"
-        >
-          {lang === "en" ? "Clear" : "مسح"}
-        </Button>
+        
+          <div className="flex gap-2">
+            {/* Save Summary Button */}
+            <Button
+              onClick={() => handleSaveSummary(results, type)}
+              variant="outline"
+              size="sm"
+              className="border-green-600 text-green-400 hover:bg-green-600 hover:text-white"
+            >
+              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              {lang === "en" ? "Save" : "حفظ"}
+            </Button>
+            
+            <Button
+              onClick={clearResults}
+              variant="outline"
+              size="sm"
+              className="border-gray-600 text-gray-300"
+            >
+              {lang === "en" ? "Clear" : "مسح"}
+            </Button>
+          </div>
       </div>
 
       {results.book?.thumbnail && (

@@ -1,35 +1,39 @@
-'use client';
-import { useEffect, useRef } from 'react';
+// components/ShareModal.jsx
+"use client";
+import { useState, useEffect } from 'react';
 
-const ShareModal = ({ isOpen, onClose, shareUrl, title }) => {
-  const modalRef = useRef(null);
+export const ShareModal = ({ isOpen, onClose, bookTitle, summary }) => {
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (!isOpen) return;
-
-    const handleClickOutside = (event) => {
-      if (modalRef.current && !modalRef.current.contains(event.target)) {
-        onClose();
-      }
-    };
-
-    // Add event listener with timeout to ensure DOM is ready
-    const timer = setTimeout(() => {
-      document.addEventListener('mousedown', handleClickOutside);
-    }, 100);
-
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    if (isOpen) {
+      const handleEscape = (e) => {
+        if (e.key === 'Escape') onClose();
+      };
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
   }, [isOpen, onClose]);
+
+  const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const shareText = `Check out this book summary: ${bookTitle}`;
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(shareUrl);
-      alert('Link copied to clipboard!');
+      await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy: ', err);
+      console.error('Failed to copy:', err);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = `${shareText}\n${shareUrl}`;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -37,56 +41,27 @@ const ShareModal = ({ isOpen, onClose, shareUrl, title }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div 
-        ref={modalRef}
-        className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full shadow-xl"
-      >
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-          Share "{title}"
-        </h3>
-        
-        <div className="space-y-3">
-          <div className="flex gap-2 mb-4">
-            <button
-              onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(shareUrl)}`, '_blank')}
-              className="flex-1 bg-blue-400 text-white py-2 px-3 rounded text-sm hover:bg-blue-500 transition-colors"
-            >
-              Twitter
-            </button>
-            <button
-              onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank')}
-              className="flex-1 bg-blue-600 text-white py-2 px-3 rounded text-sm hover:bg-blue-700 transition-colors"
-            >
-              Facebook
-            </button>
-          </div>
-
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={shareUrl}
-              readOnly
-              className="flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded text-sm bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
-              onClick={(e) => e.target.select()}
-            />
-            <button
-              onClick={copyToClipboard}
-              className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition-colors text-sm"
-            >
-              Copy
-            </button>
-          </div>
-          
+      <div className="bg-gray-800 rounded-lg max-w-md w-full p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-white text-lg font-semibold">Share Summary</h3>
           <button
             onClick={onClose}
-            className="w-full mt-2 bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600 transition-colors text-sm"
+            className="text-gray-400 hover:text-white text-2xl"
           >
-            Close
+            &times;
           </button>
+        </div>
+        
+        <div className="space-y-4">
+          <button
+            onClick={copyToClipboard}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors"
+          >
+            {copied ? 'Copied!' : 'Copy Link'}
+          </button>
+
         </div>
       </div>
     </div>
   );
 };
-
-export default ShareModal;

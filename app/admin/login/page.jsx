@@ -10,7 +10,7 @@ const AdminLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
-
+  
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -18,12 +18,6 @@ const AdminLogin = () => {
 
     try {
       const data = await api.adminLogin(username, password);
-      
-      // حفظ التوكن وبيانات المسؤول
-      localStorage.setItem("admin_token", data.token);
-      localStorage.setItem("admin_user", JSON.stringify(data.admin));
-      localStorage.setItem("admin_login_time", new Date().toISOString());
-      
       router.push("/admin/dashboard");
     } catch (err) {
       setError(err.message || "Invalid username or password");

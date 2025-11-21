@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useAdminStats } from "@/lib/hooks/useAdminStats";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { api } from "@/lib/api";
 
 const AdminDashboard = () => {
   const router = useRouter();
@@ -17,7 +18,8 @@ const AdminDashboard = () => {
     exportStats,
     clearStats,
     loading,
-    error 
+    error,
+    refreshStats 
   } = useAdminStats();
 
   const [activeTab, setActiveTab] = useState('overview');
@@ -25,29 +27,12 @@ const AdminDashboard = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Authentication check
+  // Secure authentication check
   useEffect(() => {
     const checkAuth = () => {
       try {
-        const token = localStorage.getItem("admin_token");
-        const adminData = localStorage.getItem("admin_user");
-        const loginTime = localStorage.getItem("admin_login_time");
-        
-        if (token && adminData && loginTime) {
-          // Check session expiration (8 hours)
-          const loginDate = new Date(loginTime);
-          const now = new Date();
-          const hoursDiff = (now - loginDate) / (1000 * 60 * 60);
-          
-          if (hoursDiff < 8) {
-            setIsAuthenticated(true);
-          } else {
-            // Session expired
-            localStorage.removeItem("admin_token");
-            localStorage.removeItem("admin_user");
-            localStorage.removeItem("admin_login_time");
-            router.push("/admin/login");
-          }
+        if (api.isAdminAuthenticated()) {
+          setIsAuthenticated(true);
         } else {
           router.push("/admin/login");
         }
@@ -68,15 +53,14 @@ const AdminDashboard = () => {
 
     const interval = setInterval(() => {
       setLastRefresh(new Date());
+      refreshStats();
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [isAuthenticated]);
+  }, [isAuthenticated, refreshStats]);
 
   const handleLogout = () => {
-    localStorage.removeItem("admin_token");
-    localStorage.removeItem("admin_user");
-    localStorage.removeItem("admin_login_time");
+    api.adminLogout();
     router.push("/admin/login");
   };
 
