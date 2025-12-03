@@ -314,13 +314,6 @@ const SpinnerWithPercentage = ({ progress, size = "medium", lang = "en" }) => {
       onClick={() => handleBookSelect(book.title)}
     >
       <div className="flex items-start gap-4">
-        {book.thumbnail && (
-          <img
-            src={book.thumbnail}
-            alt={book.title}
-            className="w-16 h-24 object-cover rounded-lg shadow-md group-hover:scale-105 transition-transform"
-          />
-        )}
         <div className="flex-1">
           <h4 className="font-semibold text-white group-hover:text-purple-300 transition-colors">
             {book.title}
@@ -455,29 +448,7 @@ const renderResults = (results, loading, error, type, progress = 0, currentStep 
             : dict[lang].uploadResults}
         </h3>
         
-          <div className="flex gap-2">
-            {/* Save Summary Button */}
-            <Button
-              onClick={() => handleSaveSummary(results, type)}
-              variant="outline"
-              size="sm"
-              className="border-green-600 text-green-400 hover:bg-green-600 hover:text-white"
-            >
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-              </svg>
-              {lang === "en" ? "Save" : "حفظ"}
-            </Button>
-            
-            <Button
-              onClick={clearResults}
-              variant="outline"
-              size="sm"
-              className="border-gray-600 text-gray-300"
-            >
-              {lang === "en" ? "Clear" : "مسح"}
-            </Button>
-          </div>
+
       </div>
 
       {results.book?.thumbnail && (

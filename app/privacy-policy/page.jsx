@@ -10,96 +10,137 @@ const PrivacyPolicy = () => {
   const content = {
     en: {
       title: "Privacy Policy",
-      welcome: "Welcome to <strong>booksummarizer.net</strong>. We respect your privacy and are committed to protecting user data. This page explains the types of data we collect, how we use it, and how you can control it.",
-      
-      infoWeCollect: "Information We Collect",
-      voluntaryData: "<strong>Data you provide voluntarily:</strong> Such as username or email if you register or contact us.",
-      usageData: "<strong>Usage data:</strong> Pages visited, number of visits, time spent, and IP address (anonymized or truncated as needed).",
-      cookies: "<strong>Cookies:</strong> We use cookies to improve user experience, remember preferences, and for analytics and advertising purposes.",
-      
-      googleServices: "Our Use of Services and Integration with Google",
-      googleServicesDesc: "We may use external Google services to operate the site, analyze performance, and display ads. Main services we may integrate:",
-      analytics: "<strong>Google Analytics:</strong> To analyze user visits, traffic sources, and visitor behavior on the site. This data is used to improve content and user experience.",
-      adsense: "<strong>Google AdSense or alternative ads:</strong> To display ads on the site. Certain data may be collected (such as general interests and sites you visit) to show ads relevant to visitor interests.",
-      tagManager: "<strong>Google Tag Manager:</strong> To manage tags on the site flexibly and securely without direct code modification.",
-      recaptcha: "<strong>Google reCAPTCHA:</strong> For protection against automated messages and spam when there are contact forms or registration.",
-      
-      dataUsage: "How We Use Data",
+      welcome: `Welcome to <strong>booksummarizer.net</strong>. We respect your privacy and are committed to protecting user data. 
+      This policy explains in detail the type of information we collect, the legal basis for processing your data, how we use it, 
+      how long we keep it, and the rights you have as a user. By using this website, you agree to the practices stated in this policy.`,
+
+      infoWeCollect: "1. Information We Collect",
+      voluntaryData: "<strong>Voluntary Data:</strong> Such as name, username, or email address when creating an account, contacting us, or using any interactive feature.",
+      usageData: "<strong>Usage Data:</strong> Includes device type, browser information, pages visited, time spent, referring links, and anonymized IP.",
+      cookies: "<strong>Cookies:</strong> Cookies help us remember preferences, enhance performance, improve loading speed, analyze behavior, and personalize ads.",
+
+      googleServices: "2. Use of Google Services",
+      googleServicesDesc: "We integrate several trusted external tools to ensure smooth operation, analytics, and advertising:",
+      analytics: "<strong>Google Analytics:</strong> Used to track website usage, visitor flow, bounce rates, and engagement trends.",
+      adsense: "<strong>Google AdSense or other ad networks:</strong> May display personalized ads based on interest categories.",
+      tagManager: "<strong>Google Tag Manager:</strong> Helps manage tracking scripts securely without modifying the code manually.",
+      recaptcha: "<strong>Google reCAPTCHA:</strong> Protects the website from bots, spam, and automated abuse.",
+
+      dataUsage: "3. How We Use Your Data",
       usagePoints: [
-        "Improve content quality and user experience.",
-        "Operate technical services like ads and performance analytics.",
-        "Respond to user inquiries and provide support."
+        "To improve content quality, platform performance, and user experience.",
+        "To ensure website security and monitor suspicious activities.",
+        "To adapt summaries, recommendations, and search features to user needs.",
+        "To run advertisements and analytics tools legally and ethically.",
+        "To respond to inquiries and provide technical support."
       ],
-      
-      dataSharing: "Data Sharing with Third Parties",
-      sharingDesc: "We may share limited data with third-party service providers (like Google) for advertising, analytics, and hosting purposes. These parties are bound by their own privacy policies.",
-      
-      controlOptions: "Control and Options",
+
+      dataSharing: "4. Data Sharing",
+      sharingDesc: `We do not sell personal data. Limited data may be shared with trusted third-party service providers 
+      such as Google, hosting companies, or analytics services. These parties follow strict contractual privacy obligations.`,
+
+      legalBasis: "5. Legal Basis for Processing (GDPR–Compliant)",
+      legalBasisDesc: `
+        We process user data based on one or more of the following:
+        • Consent (when you voluntarily provide data or accept cookies)
+        • Legitimate interest to improve website security and functionality
+        • Compliance with legal obligations
+      `,
+
+      controlOptions: "6. Your Rights and Control Options",
       controlPoints: [
-        "You can disable cookies from browser settings, but this may affect some site functions.",
-        "To limit personalized ad tracking, you can visit Google's ad settings page and manage your preferences.",
-        "To limit Google Analytics tracking, you can use anti-tracking add-ons or install the Google Analytics opt-out tool provided by Google."
+        "You may disable cookies at any time through browser settings.",
+        "You may request access, correction, or deletion of your personal data.",
+        "You may withdraw consent for data processing when applicable.",
+        "You may opt out of personalized ads through Google Ads Settings.",
+        "You may prevent Google Analytics tracking using official browser add-ons."
       ],
-      
-      dataRetention: "Data Retention",
-      retentionDesc: "We retain data for the period necessary to achieve the purposes outlined in this policy or to comply with legal obligations. When no longer needed, we work to delete or anonymize data securely.",
-      
-      externalLinks: "Links to Other Sites",
-      linksDesc: "The site may contain links to other sites not controlled by booksummarizer.net. We advise reviewing the privacy policies of those sites when visiting.",
-      
-      policyChanges: "Changes to Privacy Policy",
-      changesDesc: "We may update this policy from time to time. We will announce important updates through the site or associated communication channels.",
-      
-      contact: "Contact Us",
-      contactDesc: "If you have any questions or wish to request deletion or modification of your data, contact us through the 'Contact Us' page or send a message to:",
-      
+
+      dataRetention: "7. Data Retention",
+      retentionDesc: `We retain data only for the period required to fulfill legitimate purposes such as security, 
+      analytics, and technical operation. When data is no longer needed, we delete or anonymize it safely.`,
+
+      security: "8. Data Security",
+      securityDesc: `We apply administrative, technical, and organizational safety measures to protect data from 
+      unauthorized access, alteration, or misuse. Although no system is fully immune, we prioritize user safety.`,
+
+      externalLinks: "9. External Links",
+      linksDesc: "Our website may include links to external websites. We are not responsible for their content or privacy practices.",
+
+      policyChanges: "10. Policy Updates",
+      changesDesc: "This privacy policy may be updated occasionally. Major changes will be announced on this page.",
+
+      contact: "11. Contact Us",
+      contactDesc: "If you have privacy questions or want your data removed or updated, contact us at:",
       lastUpdated: "Last updated:"
     },
+
+    /* ------------------------------------------------------------------- */
+
     ar: {
       title: "سياسة الخصوصية",
-      welcome: "مرحبًا بك في <strong>booksummarizer.net</strong>. نحترم خصوصيتك ونلتزم بحماية بيانات المستخدمين. توضح هذه الصفحة أنواع البيانات التي نجمعها، كيف نستخدمها، وكيف يمكنك التحكم بها.",
-      
+      welcome: `مرحبًا بك في <strong>booksummarizer.net</strong>. نحن نحترم خصوصيتك ونحرص على حماية بياناتك. 
+      توضح هذه السياسة بشكل تفصيلي أنواع البيانات التي نجمعها، والأساس القانوني لمعالجتها، وكيف نستخدمها، 
+      ومدة الاحتفاظ بها، وما هي حقوقك كمستخدم. استخدامك للموقع يعني موافقتك على هذه السياسة.`,
+
       infoWeCollect: "1. المعلومات التي نجمعها",
-      voluntaryData: "<strong>البيانات التي تقدمها طواعية:</strong> مثل اسم المستخدم أو البريد الإلكتروني إذا سجّلت أو تواصلت معنا.",
-      usageData: "<strong>بيانات الاستخدام:</strong> صفحات الزيارة، عدد الزيارات، زمن البقاء، وعنوان الـ IP (مُجهّد أو مجزّأ حسب الحاجة).",
-      cookies: "<strong>ملفات تعريف الارتباط (Cookies):</strong> نستخدم الكوكيز لتحسين تجربة المستخدم، وتذكر التفضيلات، ولأغراض التحليل والإعلانات.",
-      
-      googleServices: "2. استخدامنا للخدمات والربط مع Google",
-      googleServicesDesc: "قد نستخدم خدمات خارجية من جوجل لتشغيل الموقع وتحليل الأداء وعرض الإعلانات. الخدمات الرئيسية التي قد نربطها:",
-      analytics: "<strong>Google Analytics:</strong> لتحليل زيارات المستخدمين، مصادر الترافيك، وسلوك الزوار داخل الموقع. تُستخدَم هذه البيانات لتحسين المحتوى وتجربة الاستخدام.",
-      adsense: "<strong>Google AdSense أو بدائل إعلانية:</strong> لعرض إعلانات داخل الموقع. قد تُجمَع بيانات معينة (مثل الاهتمامات العامة والمواقع التي تزورها) لعرض إعلانات متوافقه مع اهتمامات الزوار.",
-      tagManager: "<strong>Google Tag Manager:</strong> لإدارة الوسوم (tags) على الموقع بشكل مرن وآمن دون تعديل مباشر في الكود.",
-      recaptcha: "<strong>reCAPTCHA من Google:</strong> للحماية من الرسائل الآلية والـ spam عند وجود نماذج تواصل أو تسجيل.",
-      
-      dataUsage: "3. كيف نستخدم البيانات",
+      voluntaryData: "<strong>البيانات المقدمة طوعًا:</strong> مثل الاسم أو الإيميل عند التسجيل أو التواصل معنا.",
+      usageData: "<strong>بيانات الاستخدام:</strong> نوع الجهاز، نوع المتصفح، الصفحات التي تمت زيارتها، مدة البقاء، الروابط المحوّلة، وعنوان IP بعد إخفاء جزء منه.",
+      cookies: "<strong>ملفات الارتباط (Cookies):</strong> تستخدم لتحسين الأداء، تسريع التحميل، التحليل الإحصائي، وتخصيص الإعلانات.",
+
+      googleServices: "2. استخدام خدمات Google",
+      googleServicesDesc: "قد نستخدم الخدمات التالية لضمان تشغيل الموقع بكفاءة:",
+      analytics: "<strong>Google Analytics:</strong> لتحليل التفاعل وسلوك الزوار.",
+      adsense: "<strong>AdSense أو شبكات بديلة:</strong> لعرض إعلانات قد تكون مخصّصة حسب الاهتمامات.",
+      tagManager: "<strong>Google Tag Manager:</strong> لإدارة الأكواد الخاصة بالتحليلات والإعلانات بأمان.",
+      recaptcha: "<strong>reCAPTCHA:</strong> للحماية من الروبوتات والبريد العشوائي.",
+
+      dataUsage: "3. كيفية استخدام البيانات",
       usagePoints: [
         "تحسين جودة المحتوى وتجربة المستخدم.",
-        "تشغيل الخدمات التقنية مثل الإعلانات وتحليل الأداء.",
-        "الرد على استفسارات المستخدمين وتقديم الدعم."
+        "حماية الموقع ومراقبة الأنشطة المشبوهة.",
+        "تشغيل الإعلانات والتحليلات بشكل قانوني ومنضبط.",
+        "الرد على الاستفسارات وتقديم الدعم الفني.",
+        "تطوير ميزات جديدة بناءً على سلوك المستخدم."
       ],
-      
-      dataSharing: "4. مشاركة البيانات مع طرف ثالث",
-      sharingDesc: "قد نشارك بيانات محدودة مع مزودي خدمات طرف ثالث (مثل Google) لأغراض الإعلان، التحليل، والاستضافة. هذه الجهات ملزمة بالالتزام بسياسات الخصوصية الخاصة بها.",
-      
-      controlOptions: "5. التحكم والخيارات",
+
+      dataSharing: "4. مشاركة البيانات",
+      sharingDesc: `لا نقوم ببيع بيانات المستخدم. قد نشارك بيانات محدودة مع جهات موثوقة مثل Google أو مزودي الاستضافة، 
+      وذلك تحت التزامات قانونية صارمة لحماية الخصوصية.`,
+
+      legalBasis: "5. الأساس القانوني لمعالجة البيانات",
+      legalBasisDesc: `
+        تتم معالجة البيانات بناءً على واحد أو أكثر مما يلي:
+        • الموافقة الصريحة منك
+        • مصلحة مشروعة لتحسين الموقع وحمايته
+        • الامتثال لمتطلبات قانونية
+      `,
+
+      controlOptions: "6. حقوقك وكيف تتحكم في بياناتك",
       controlPoints: [
-        "يمكنك تعطيل الكوكيز من إعدادات المتصفح، لكن قد يؤثر ذلك على بعض وظائف الموقع.",
-        "للحد من تتبع الإعلانات المخصصة، يمكنك زيارة صفحة إعدادات الإعلانات في Google وإدارة تفضيلاتك.",
-        "للحد من تتبع Google Analytics، يمكنك استخدام إضافات مانعة للتتبع أو تثبيت أداة تعطيل Google Analytics الموفرة من جوجل."
+        "يمكنك تعطيل الكوكيز من إعدادات المتصفح.",
+        "لك الحق في طلب نسخة من بياناتك أو تعديلها أو حذفها.",
+        "يمكنك سحب موافقتك على معالجة البيانات في أي وقت.",
+        "يمكنك إيقاف الإعلانات المخصصة من إعدادات Google.",
+        "يمكنك استخدام إضافات منع التتبع لمنع Google Analytics."
       ],
-      
-      dataRetention: "6. حفظ البيانات",
-      retentionDesc: "نحتفظ بالبيانات بالمدة اللازمة لتحقيق الأغراض المبيّنة في هذه السياسة أو للامتثال للالتزامات القانونية. عند انتهاء الحاجة، نعمل على حذف أو إخفاء البيانات بشكل آمن.",
-      
-      externalLinks: "7. روابط لمواقع أخرى",
-      linksDesc: "قد يحتوي الموقع على روابط لمواقع أخرى لا تتحكم فيها booksummarizer.net. ننصح بمراجعة سياسات الخصوصية لتلك المواقع عند الزيارة.",
-      
-      policyChanges: "8. التغييرات على سياسة الخصوصية",
-      changesDesc: "قد نحدّث هذه السياسة من وقت لآخر. سنعلن عن التحديثات المهمة عبر الموقع أو قنوات التواصل المرتبطة.",
-      
-      contact: "9. تواصل معنا",
-      contactDesc: "لو عندك أي استفسار أو رغبت في طلب حذف بياناتك أو تعديلها، تواصل معنا عبر صفحة 'تواصل معنا' أو أرسل رسالة إلى:",
-      
+
+      dataRetention: "7. مدة الاحتفاظ بالبيانات",
+      retentionDesc: `نحتفظ بالبيانات فقط لمدة الحاجة لأغراض الأمان والتحليل وتشغيل الخدمات. 
+      وبعد انتهاء الغرض، نقوم بحذفها أو إخفائها بشكل دائم.`,
+
+      security: "8. أمن البيانات",
+      securityDesc: `نطبق إجراءات أمنية تنظيمية وتقنية لمنع الوصول غير المصرح به أو سوء الاستخدام. 
+      ورغم ذلك لا يمكن ضمان الأمان بنسبة 100٪ مثل أي نظام إلكتروني.`,
+
+      externalLinks: "9. روابط خارجية",
+      linksDesc: "قد يحتوي الموقع على روابط لمواقع أخرى لا نملك السيطرة عليها. ننصح بمراجعة سياسات الخصوصية الخاصة بها.",
+
+      policyChanges: "10. التعديلات على السياسة",
+      changesDesc: "قد نقوم بتحديث هذه السياسة. سيتم توضيح التغييرات في هذه الصفحة.",
+
+      contact: "11. تواصل معنا",
+      contactDesc: "لأي استفسار أو لطلب حذف أو تعديل بياناتك يمكنك التواصل عبر:",
       lastUpdated: "آخر تحديث:"
     }
   };
@@ -109,7 +150,7 @@ const PrivacyPolicy = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white">
       <Header />
-      
+
       <div className="pt-32 pb-20 px-4">
         <div className={`max-w-4xl mx-auto ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
           <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
@@ -117,95 +158,73 @@ const PrivacyPolicy = () => {
           </h1>
 
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-8 border border-gray-700">
-            <div 
-              className={`prose prose-invert max-w-none ${
-                lang === 'ar' ? 'prose-rtl' : 'prose-ltr'
-              }`}
-            >
+            <div className={`prose prose-invert max-w-none ${lang === 'ar' ? 'prose-rtl' : 'prose-ltr'}`}>
+              
               <p dangerouslySetInnerHTML={{ __html: currentContent.welcome }} />
 
-              <h2 className="text-2xl font-semibold mt-8 mb-4 text-purple-300">
-                {currentContent.infoWeCollect}
-              </h2>
-              <ul className="space-y-2">
+              <h2 className="section-title">{currentContent.infoWeCollect}</h2>
+              <ul>
                 <li dangerouslySetInnerHTML={{ __html: currentContent.voluntaryData }} />
                 <li dangerouslySetInnerHTML={{ __html: currentContent.usageData }} />
                 <li dangerouslySetInnerHTML={{ __html: currentContent.cookies }} />
               </ul>
 
-              <h2 className="text-2xl font-semibold mt-8 mb-4 text-purple-300">
-                {currentContent.googleServices}
-              </h2>
+              <h2 className="section-title">{currentContent.googleServices}</h2>
               <p>{currentContent.googleServicesDesc}</p>
-              <ul className="space-y-3 mt-4">
+              <ul>
                 <li dangerouslySetInnerHTML={{ __html: currentContent.analytics }} />
                 <li dangerouslySetInnerHTML={{ __html: currentContent.adsense }} />
                 <li dangerouslySetInnerHTML={{ __html: currentContent.tagManager }} />
                 <li dangerouslySetInnerHTML={{ __html: currentContent.recaptcha }} />
               </ul>
 
-              <h2 className="text-2xl font-semibold mt-8 mb-4 text-purple-300">
-                {currentContent.dataUsage}
-              </h2>
-              <ul className="space-y-2">
-                {currentContent.usagePoints.map((point, index) => (
-                  <li key={index}>{point}</li>
-                ))}
+              <h2 className="section-title">{currentContent.dataUsage}</h2>
+              <ul>
+                {currentContent.usagePoints.map((p, i) => <li key={i}>{p}</li>)}
               </ul>
 
-              <h2 className="text-2xl font-semibold mt-8 mb-4 text-purple-300">
-                {currentContent.dataSharing}
-              </h2>
+              <h2 className="section-title">{currentContent.dataSharing}</h2>
               <p>{currentContent.sharingDesc}</p>
 
-              <h2 className="text-2xl font-semibold mt-8 mb-4 text-purple-300">
-                {currentContent.controlOptions}
-              </h2>
-              <ul className="space-y-2">
-                {currentContent.controlPoints.map((point, index) => (
-                  <li key={index}>{point}</li>
-                ))}
+              <h2 className="section-title">{currentContent.legalBasis}</h2>
+              <p>{currentContent.legalBasisDesc}</p>
+
+              <h2 className="section-title">{currentContent.controlOptions}</h2>
+              <ul>
+                {currentContent.controlPoints.map((p, i) => <li key={i}>{p}</li>)}
               </ul>
 
-              <h2 className="text-2xl font-semibold mt-8 mb-4 text-purple-300">
-                {currentContent.dataRetention}
-              </h2>
+              <h2 className="section-title">{currentContent.dataRetention}</h2>
               <p>{currentContent.retentionDesc}</p>
 
-              <h2 className="text-2xl font-semibold mt-8 mb-4 text-purple-300">
-                {currentContent.externalLinks}
-              </h2>
+              <h2 className="section-title">{currentContent.security}</h2>
+              <p>{currentContent.securityDesc}</p>
+
+              <h2 className="section-title">{currentContent.externalLinks}</h2>
               <p>{currentContent.linksDesc}</p>
 
-              <h2 className="text-2xl font-semibold mt-8 mb-4 text-purple-300">
-                {currentContent.policyChanges}
-              </h2>
+              <h2 className="section-title">{currentContent.policyChanges}</h2>
               <p>{currentContent.changesDesc}</p>
 
-              <h2 className="text-2xl font-semibold mt-8 mb-4 text-purple-300">
-                {currentContent.contact}
-              </h2>
+              <h2 className="section-title">{currentContent.contact}</h2>
               <p>
-                {currentContent.contactDesc}{' '}
-                <a 
-                  href="mailto:info@booksummarizer.net" 
-                  className="text-blue-400 hover:text-blue-300 transition-colors"
-                >
+                {currentContent.contactDesc}{" "}
+                <a href="mailto:info@booksummarizer.net" className="text-blue-400">
                   info@booksummarizer.net
                 </a>
               </p>
 
               <hr className="my-8 border-gray-600" />
-              
               <p className="text-sm text-gray-400">
-                {currentContent.lastUpdated} {new Date().toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US')}
+                {currentContent.lastUpdated}{" "}
+                {new Date().toLocaleDateString(lang === "ar" ? "ar-EG" : "en-US")}
               </p>
             </div>
           </div>
         </div>
       </div>
 
- 
+      <Footer />
     </div>
   );
 };
