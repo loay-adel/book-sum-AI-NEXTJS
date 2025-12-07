@@ -4,14 +4,14 @@ import { useLanguage } from "@/lib/context/LanguageContext";
 import { useBookSearch } from "@/lib/hooks/useBookSearch";
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
 import { useCategories } from "@/lib/hooks/useCategories";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import ReactMarkdown from "react-markdown";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUserData } from '@/lib/hooks/useUserData';
-import { ExternalLink } from 'lucide-react';
-// Static dictionary - moved outside component
+import {  ExternalLink, Bookmark, Download, Clipboard } from 'lucide-react';
+
+
 const contentDict = {
   en: {
     search: "Search Book",
@@ -31,17 +31,20 @@ const contentDict = {
     selectFile: "Select PDF file",
     summary: "Summary",
     by: "by",
-    libraryTitle: "book summarizer",
-    librarySubtitle:
-      "Discover, read and explore thousands of books with AI-powered summaries",
+    libraryTitle: "Book Summarizer",
+    librarySubtitle: "Discover, read and explore thousands of books with AI-powered summaries",
     quickActions: "Quick Actions",
     popularCategories: "Popular Categories",
     recentlyAdded: "Recently Added",
     trendingNow: "Trending Now",
-        loading: "Loading...",
     processing: "Processing...",
     searching: "Searching",
     finalizing: "Finalizing",
+    copySummary: "Copy Summary",
+    downloadSummary: "Download Summary",
+    saveForLater: "Save for Later",
+    waiting: "Waiting...",
+    complete: "Complete!"
   },
   ar: {
     search: "ابحث عن كتاب",
@@ -61,18 +64,21 @@ const contentDict = {
     selectFile: "اختر ملف PDF",
     summary: "ملخص",
     by: "بواسطة",
-    libraryTitle: "book summarizer",
-    librarySubtitle:
-      "اكتشف واقرأ واستكشف الآلاف من الكتب مع ملخصات مدعومة بالذكاء الاصطناعي",
+    libraryTitle: "ملخص الكتب",
+    librarySubtitle: "اكتشف واقرأ واستكشف الآلاف من الكتب مع ملخصات مدعومة بالذكاء الاصطناعي",
     quickActions: "إجراءات سريعة",
     popularCategories: "التصنيفات الشائعة",
     recentlyAdded: "المضاف حديثاً",
     trendingNow: "الأكثر شهرة الآن",
-        loading: "جاري التحميل...",
     processing: "جاري المعالجة...",
     searching: "جاري البحث",
     finalizing: "جاري الانتهاء",
-  },
+    copySummary: "نسخ الملخص",
+    downloadSummary: "تحميل الملخص",
+    saveForLater: "حفظ للمستقبل",
+    waiting: "في الانتظار...",
+    complete: "اكتمل!"
+  }
 };
 
 export const MainContentClient = ({ initialLang }) => {
@@ -86,25 +92,29 @@ export const MainContentClient = ({ initialLang }) => {
     addSearch, 
     saveSummary, 
     searchHistory, 
-    savedSummaries 
+    savedSummaries,
+    userData 
   } = useUserData();
+  
   // Use your custom hooks
   const {
     results: searchResults,
     loading: searchLoading,
     currentStep: searchStep,
-     progress: searchProgress,
+    progress: searchProgress,
     error: searchError,
     searchBook,
   } = useBookSearch();
+  
   const {
     results: uploadResults,
     loading: uploadLoading,
     currentStep: uploadStep,
-      progress: uploadProgress,
+    progress: uploadProgress,
     error: uploadError,
     uploadFile,
   } = useFileUpload();
+  
   const {
     categories,
     selectedCategory,
@@ -114,8 +124,13 @@ export const MainContentClient = ({ initialLang }) => {
     selectCategory,
   } = useCategories();
 
-  const dict = contentDict;
+  // Safely get dictionary for current language
+  const getDict = () => {
+    const currentLang = lang || initialLang || 'en';
+    return contentDict[currentLang] || contentDict.en;
+  };
 
+  const dict = getDict();
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -132,9 +147,15 @@ export const MainContentClient = ({ initialLang }) => {
           true, 
           responseTime
         );
+        
+        // Auto-save the summary if results are good
+        if (searchResults?.book && searchResults?.summary) {
+          setTimeout(() => {
+            handleSaveSummary(searchResults, 'search');
+          }, 1000);
+        }
       } catch (error) {
         const responseTime = Date.now() - startTime;
-        // Track failed search
         await addSearch(
           searchQuery, 
           null, 
@@ -145,7 +166,6 @@ export const MainContentClient = ({ initialLang }) => {
     }
   };
 
-  // Update your file upload handler
   const handleFileUpload = async (e) => {
     e.preventDefault();
     if (selectedFile) {
@@ -154,13 +174,19 @@ export const MainContentClient = ({ initialLang }) => {
         await uploadFile(selectedFile);
         const responseTime = Date.now() - startTime;
         
-        // Track PDF upload
         await addSearch(
           `PDF Upload: ${selectedFile.name}`,
           uploadResults,
           true,
           responseTime
         );
+        
+        // Auto-save the summary
+        if (uploadResults?.book && uploadResults?.summary) {
+          setTimeout(() => {
+            handleSaveSummary(uploadResults, 'upload');
+          }, 1000);
+        }
       } catch (error) {
         const responseTime = Date.now() - startTime;
         await addSearch(
@@ -173,7 +199,6 @@ export const MainContentClient = ({ initialLang }) => {
     }
   };
 
-  // Function to save summaries when viewing results
   const handleSaveSummary = async (results, type = 'search') => {
     if (results?.book && results?.summary) {
       try {
@@ -184,11 +209,58 @@ export const MainContentClient = ({ initialLang }) => {
           results.amazonLink,
           results.recommendations || []
         );
-       
       } catch (error) {
         console.error('Failed to save summary:', error);
       }
     }
+  };
+
+  const copySummary = async () => {
+    const results = searchResults || uploadResults;
+    if (!results) return;
+
+    const shareText = `${dict.summary}: ${results.book?.title} ${dict.by} ${results.book?.author}\n\n${results.summary?.substring(0, 200)}...`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${dict.summary}: ${results.book?.title}`,
+          text: shareText,
+          url: window.location.href,
+        });
+      } catch (err) {
+        console.log('Share cancelled');
+      }
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(shareText)
+        .then(() => alert(lang === "en" ? "Summary copied to clipboard!" : "تم نسخ الملخص إلى الحافظة!"))
+        .catch(err => console.error('Copy failed:', err));
+    }
+  };
+
+  const downloadSummary = () => {
+    const results = searchResults || uploadResults;
+    if (!results) return;
+
+    const content = `
+${dict.summary}: ${results.book?.title}
+${dict.by}: ${results.book?.author}
+${new Date().toLocaleDateString()}
+
+${results.summary}
+
+${dict.recommendations}:
+${(results.recommendations || []).map(book => `• ${book.title} ${dict.by} ${book.author}`).join('\n')}
+    `.trim();
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${results.book?.title || 'summary'}-${new Date().toISOString().split('T')[0]}.txt`;
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   const handleFileChange = (e) => {
@@ -213,96 +285,69 @@ export const MainContentClient = ({ initialLang }) => {
     setSelectedFile(null);
   };
 
+  const SpinnerWithPercentage = ({ progress, size = "medium", currentLang = "en" }) => {
+    const sizes = {
+      small: "w-16 h-16",
+      medium: "w-20 h-20",
+      large: "w-24 h-24"
+    };
 
+    const strokeWidth = 4;
+    const radius = {
+      small: 30,
+      medium: 38,
+      large: 46
+    }[size];
+    
+    const circumference = 2 * Math.PI * radius;
+    const strokeDashoffset = circumference - (progress / 100) * circumference;
 
+    // Get dictionary for spinner
+    const spinnerDict = contentDict[currentLang] || contentDict.en;
 
-
-const SpinnerWithPercentage = ({ progress, size = "medium", lang = "en" }) => {
-  const sizes = {
-    small: "w-16 h-16",
-    medium: "w-20 h-20",
-    large: "w-24 h-24"
-  };
-
-  const strokeWidth = 4;
-  const radius = {
-    small: 30,
-    medium: 38,
-    large: 46
-  }[size];
-  
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (progress / 100) * circumference;
-
-  // Arabic translations for loading states
-  const loadingText = {
-    en: {
-      processing: "Processing...",
-      complete: "Complete!",
-      starting: "Starting...",
-      searching: "Searching",
-      processingStep: "Processing",
-      finalizing: "Finalizing",
-      waiting: "Waiting..."
-    },
-    ar: {
-      processing: "جاري المعالجة...",
-      complete: "اكتمل!",
-      starting: "جاري البدء...",
-      searching: "جاري البحث",
-      processingStep: "جاري المعالجة",
-      finalizing: "جاري الانتهاء",
-      waiting: "في الانتظار..."
-    }
-  };
-
-  const text = loadingText[lang];
-
-  return (
-    <div className="flex flex-col items-center justify-center space-y-4">
-      <div className="relative">
-        {/* Background circle */}
-        <svg className={sizes[size]} viewBox="0 0 100 100">
+    return (
+      <div className="flex flex-col items-center justify-center space-y-4">
+        <div className="relative">
           {/* Background circle */}
-          <circle
-            cx="50"
-            cy="50"
-            r={radius}
-            stroke="#374151"
-            strokeWidth={strokeWidth}
-            fill="none"
-          />
-          {/* Progress circle */}
-          <circle
-            cx="50"
-            cy="50"
-            r={radius}
-            stroke="#3B82F6"
-            strokeWidth={strokeWidth}
-            fill="none"
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={strokeDashoffset}
-            transform="rotate(-90 50 50)"
-          />
-        </svg>
-        
-        {/* Percentage text */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-white font-bold text-sm">
-            {Math.round(progress)}%
-          </span>
+          <svg className={sizes[size]} viewBox="0 0 100 100">
+            {/* Background circle */}
+            <circle
+              cx="50"
+              cy="50"
+              r={radius}
+              stroke="#374151"
+              strokeWidth={strokeWidth}
+              fill="none"
+            />
+            {/* Progress circle */}
+            <circle
+              cx="50"
+              cy="50"
+              r={radius}
+              stroke="#3B82F6"
+              strokeWidth={strokeWidth}
+              fill="none"
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              transform="rotate(-90 50 50)"
+            />
+          </svg>
+          
+          {/* Percentage text */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-white font-bold text-sm">
+              {Math.round(progress)}%
+            </span>
+          </div>
         </div>
+        
+        <p className="text-gray-400 text-sm">
+          {progress < 100 ? spinnerDict.processing : spinnerDict.complete}
+        </p>
       </div>
-      
-      
-      <p className="text-gray-400 text-sm">
-        {progress < 100 ? text.processing : text.complete}
-      </p>
-    </div>
-  );
-};
-
+    );
+  };
 
   const renderBookCard = (book, index, showAuthor = true) => (
     <motion.div
@@ -320,7 +365,7 @@ const SpinnerWithPercentage = ({ progress, size = "medium", lang = "en" }) => {
           </h4>
           {showAuthor && book.author && (
             <p className="text-sm text-gray-400 mt-1">
-              {dict[lang].by} {book.author}
+              {dict.by} {book.author}
             </p>
           )}
           {book.pageCount && (
@@ -333,189 +378,222 @@ const SpinnerWithPercentage = ({ progress, size = "medium", lang = "en" }) => {
     </motion.div>
   );
 
-const renderResults = (results, loading, error, type, progress = 0, currentStep = "") => {
-  if (loading)
+  const renderResults = (results, loading, error, type, progress = 0, currentStep = "") => {
+    const currentLang = lang || 'en';
+    
+    if (loading) {
+      return (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-6 p-8 bg-gray-900/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-700"
+        >
+          <div className="text-center space-y-6">
+            {/* Spinner with percentage */}
+            <SpinnerWithPercentage progress={progress} size="large" currentLang={currentLang} />
+            
+            {/* Current step - only show if available */}
+            {currentStep && (
+              <div className="text-purple-300 font-medium text-lg">
+                {currentStep}
+              </div>
+            )}
+            
+            {/* Loading steps with dynamic highlighting */}
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div className={`p-3 rounded-lg transition-all ${
+                progress >= 25 ? 'bg-green-900/30 text-green-400 border border-green-700' : 
+                'bg-gray-800 text-gray-500 border border-gray-700'
+              }`}>
+                <div className="text-sm font-medium">
+                  {progress < 25 ? 
+                    dict.waiting : 
+                    dict.searching
+                  }
+                </div>
+              </div>
+              <div className={`p-3 rounded-lg transition-all ${
+                progress >= 60 ? 'bg-green-900/30 text-green-400 border border-green-700' : 
+                'bg-gray-800 text-gray-500 border border-gray-700'
+              }`}>
+                <div className="text-sm font-medium">
+                  {progress < 60 ? 
+                    dict.waiting : 
+                    dict.processing
+                  }
+                </div>
+              </div>
+              <div className={`p-3 rounded-lg transition-all ${
+                progress >= 90 ? 'bg-green-900/30 text-green-400 border border-green-700' : 
+                'bg-gray-800 text-gray-500 border border-gray-700'
+              }`}>
+                <div className="text-sm font-medium">
+                  {progress < 90 ? 
+                    dict.waiting : 
+                    dict.finalizing
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      );
+    }
+    
+    if (error) {
+      return (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center py-8 bg-red-900/20 rounded-xl border border-red-800/50"
+        >
+          <svg
+            className="w-12 h-12 mx-auto text-red-400 mb-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
+          </svg>
+          <p className="text-lg font-medium text-red-300">
+            {dict.error}: {error}
+          </p>
+          <Button
+            onClick={clearResults}
+            className="mt-4 bg-gray-700 hover:bg-gray-600"
+          >
+            {lang === "en" ? "Try Again" : "حاول مرة أخرى"}
+          </Button>
+        </motion.div>
+      );
+    }
+
+    if (!results) return null;
+
+    // Calculate unique recommendations
+    const uniqueRecommendations = results.recommendations 
+      ? results.recommendations.filter((rec, index, self) => 
+          index === self.findIndex(r => 
+            r.title === rec.title && r.author === rec.author
+          )
+        )
+      : [];
+
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mt-6 p-8 bg-gray-900/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-700"
+        className="mt-6 p-6 bg-gray-900/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-700"
       >
-        <div className="text-center space-y-6">
-          {/* Spinner with percentage */}
-          <SpinnerWithPercentage progress={progress} size="large" lang={lang} />
+        <div className="flex justify-between items-center mb-6 mt-4">
+          <h3 className="text-2xl font-bold text-white">
+            {type === "search" ? dict.searchResults : dict.uploadResults}
+          </h3>
           
-          {/* Current step - only show if available */}
-          {currentStep && (
-            <div className="text-purple-300 font-medium text-lg">
-              {currentStep}
+          {/* Action buttons */}
+          <div className="flex gap-2">
+            <Button
+              onClick={() => handleSaveSummary(results, type)}
+              variant="outline"
+              size="sm"
+              className="bg-gray-800 hover:bg-gray-700 border-gray-700"
+            >
+              <Bookmark className="w-4 h-4 mr-2" />
+              {dict.saveForLater}
+            </Button>
+          </div>
+        </div>
+
+        {results.book?.thumbnail && (
+          <div className="mb-6 flex justify-center">
+            <motion.img
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              src={results.book.thumbnail}
+              alt="Book cover"
+              className="rounded-xl shadow-lg max-h-80 object-contain border border-gray-600"
+            />
+          </div>
+        )}
+
+        {results.summary && (
+          <div className="mb-8">
+            <h4 className="font-semibold text-purple-300 mb-3 text-lg">
+              {dict.summary}:
+            </h4>
+            <div className="prose prose-invert max-w-none bg-gray-800/60 p-5 rounded-xl shadow-inner text-gray-200">
+              <ReactMarkdown>{results.summary}</ReactMarkdown>
             </div>
+          </div>
+        )}
+
+        {/* Action buttons footer */}
+        <div className="flex flex-wrap gap-3 mb-6 justify-center">
+          {results.amazonLink && (
+            <motion.a
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              href={results.amazonLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-600 to-orange-700 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg text-sm"
+            >
+              <ExternalLink className="w-4 h-4" />
+              {dict.buyLink}
+            </motion.a>
           )}
           
-          {/* Loading steps with dynamic highlighting - Updated with Arabic */}
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div className={`p-3 rounded-lg transition-all ${
-              progress >= 25 ? 'bg-green-900/30 text-green-400 border border-green-700' : 
-              'bg-gray-800 text-gray-500 border border-gray-700'
-            }`}>
-              <div className="text-sm font-medium">
-                {progress < 25 ? 
-                  (lang === "en" ? "Waiting..." : "في الانتظار...") : 
-                  (lang === "en" ? "Searching" : "جاري البحث")
-                }
-              </div>
-            </div>
-            <div className={`p-3 rounded-lg transition-all ${
-              progress >= 60 ? 'bg-green-900/30 text-green-400 border border-green-700' : 
-              'bg-gray-800 text-gray-500 border border-gray-700'
-            }`}>
-              <div className="text-sm font-medium">
-                {progress < 60 ? 
-                  (lang === "en" ? "Waiting..." : "في الانتظار...") : 
-                  (lang === "en" ? "Processing" : "جاري المعالجة")
-                }
-              </div>
-            </div>
-            <div className={`p-3 rounded-lg transition-all ${
-              progress >= 90 ? 'bg-green-900/30 text-green-400 border border-green-700' : 
-              'bg-gray-800 text-gray-500 border border-gray-700'
-            }`}>
-              <div className="text-sm font-medium">
-                {progress < 90 ? 
-                  (lang === "en" ? "Waiting..." : "في الانتظار...") : 
-                  (lang === "en" ? "Finalizing" : "جاري الانتهاء")
-                }
-              </div>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    );
-  if (error)
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="text-center py-8 bg-red-900/20 rounded-xl border border-red-800/50"
-      >
-        <svg
-          className="w-12 h-12 mx-auto text-red-400 mb-3"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-          ></path>
-        </svg>
-        <p className="text-lg font-medium text-red-300">
-          {dict[lang].error}: {error}
-        </p>
-        <Button
-          onClick={clearResults}
-          className="mt-4 bg-gray-700 hover:bg-gray-600"
-        >
-          {lang === "en" ? "Try Again" : "حاول مرة أخرى"}
-        </Button>
-      </motion.div>
-    );
-
-  if (!results) return null;
-
-  // Calculate unique recommendations here, inside the function where results is available
-  const uniqueRecommendations = results.recommendations 
-    ? results.recommendations.filter((rec, index, self) => 
-        index === self.findIndex(r => 
-          r.title === rec.title && r.author === rec.author
-        )
-      )
-    : [];
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="mt-6 p-6 bg-gray-900/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-700"
-    >
-      <div className="flex justify-between items-center mb-6 mt-4">
-        <h3 className="text-2xl font-bold text-white">
-          {type === "search"
-            ? dict[lang].searchResults
-            : dict[lang].uploadResults}
-        </h3>
-        
-
-      </div>
-
-      {results.book?.thumbnail && (
-        <div className="mb-6 flex justify-center">
-          <motion.img
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            src={results.book.thumbnail}
-            alt="Book cover"
-            className="rounded-xl shadow-lg max-h-80 object-contain border border-gray-600"
-          />
-        </div>
-      )}
-
-      {results.summary && (
-        <div className="mb-8">
-          <h4 className="font-semibold text-purple-300 mb-3 text-lg">
-            {dict[lang].summary}:
-          </h4>
-          <div className="prose prose-invert max-w-none bg-gray-800/60 p-5 rounded-xl shadow-inner text-gray-200">
-            <ReactMarkdown>{results.summary}</ReactMarkdown>
-          </div>
-        </div>
-      )}
-
-      {results.amazonLink && (
-        <div className="mb-6 text-center">
-          <motion.a
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            href={results.amazonLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-600 to-orange-700 text-white px-6 py-3 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg "
+          <Button
+            onClick={copySummary}
+            variant="outline"
+            size="sm"
+            className="bg-gray-800 hover:bg-gray-700 border-gray-700"
           >
-  <ExternalLink />
-            {dict[lang].buyLink}
-          </motion.a>
+            <Clipboard className="w-4 h-4 mr-2" />
+            {dict.copySummary}
+          </Button>
+          
+          <Button
+            onClick={downloadSummary}
+            variant="outline"
+            size="sm"
+            className="bg-gray-800 hover:bg-gray-700 border-gray-700"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            {dict.downloadSummary}
+          </Button>
         </div>
-      )}
 
-      {uniqueRecommendations.length > 0 && (
-        <div>
-          <h4 className="font-semibold text-purple-300 mb-4 text-lg">
-            {dict[lang].recommendations}:
-          </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {uniqueRecommendations.map((book, index) =>
-              renderBookCard(book, index)
-            )}
+        {uniqueRecommendations.length > 0 && (
+          <div>
+            <h4 className="font-semibold text-purple-300 mb-4 text-lg">
+              {dict.recommendations}:
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {uniqueRecommendations.map((book, index) =>
+                renderBookCard(book, index)
+              )}
+            </div>
           </div>
-        </div>
-      )}
-    </motion.div>
-  );
-};
-
-
+        )}
+      </motion.div>
+    );
+  };
 
   return (
     <main className="flex-grow flex items-center justify-center relative z-10 py-8 px-4 mt-12">
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-24 -right-24 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
       </div>
       <div className="w-full max-w-6xl bg-gray-900/95 backdrop-blur-xl rounded-3xl shadow-2xl p-6 md:p-8 transition-all duration-300 border border-gray-700">
-      
+        
         {/* Header */}
         <div className="text-center mb-10">
           <motion.h1
@@ -523,12 +601,11 @@ const renderResults = (results, loading, error, type, progress = 0, currentStep 
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent mb-4 bg-300% animate-gradient"
           >
-            {dict[lang].libraryTitle}
+            {dict.libraryTitle}
           </motion.h1>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-            {dict[lang].librarySubtitle}
+            {dict.librarySubtitle}
           </p>
-
         </div>
 
         {/* Quick Actions */}
@@ -563,7 +640,7 @@ const renderResults = (results, loading, error, type, progress = 0, currentStep 
                 </svg>
               </div>
               <span className="text-white font-medium">
-                {dict[lang].search}
+                {dict.search}
               </span>
             </div>
           </div>
@@ -593,7 +670,7 @@ const renderResults = (results, loading, error, type, progress = 0, currentStep 
                 </svg>
               </div>
               <span className="text-white font-medium">
-                {dict[lang].upload}
+                {dict.upload}
               </span>
             </div>
           </div>
@@ -623,13 +700,13 @@ const renderResults = (results, loading, error, type, progress = 0, currentStep 
                 </svg>
               </div>
               <span className="text-white font-medium">
-                {dict[lang].categories}
+                {dict.categories}
               </span>
             </div>
           </div>
         </motion.div>
 
-        {/* Tabs Content - rest of the component remains the same */}
+        {/* Tabs Content */}
         <div className="mt-6">
           <AnimatePresence mode="wait">
             {/* Search Tab */}
@@ -646,7 +723,7 @@ const renderResults = (results, loading, error, type, progress = 0, currentStep 
                   className="flex flex-col md:flex-row gap-3 mb-6"
                 >
                   <Input
-                    placeholder={dict[lang].placeholder}
+                    placeholder={dict.placeholder}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="flex-1 py-3 px-4 rounded-xl bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -659,10 +736,10 @@ const renderResults = (results, loading, error, type, progress = 0, currentStep 
                     {searchLoading ? (
                       <div className="flex items-center gap-2">
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        {dict[lang].loading}
+                        {dict.loading}
                       </div>
                     ) : (
-                      dict[lang].submit
+                      dict.submit
                     )}
                   </Button>
                 </form>
@@ -673,8 +750,7 @@ const renderResults = (results, loading, error, type, progress = 0, currentStep 
                   searchError,
                   "search",
                   searchProgress,
-                  searchStep,
-                  lang 
+                  searchStep
                 )}
 
                 {!searchResults && !searchLoading && (
@@ -685,7 +761,7 @@ const renderResults = (results, loading, error, type, progress = 0, currentStep 
                   >
                     <div>
                       <h3 className="text-xl font-semibold text-white mb-4">
-                        {dict[lang].popularCategories}
+                        {dict.popularCategories}
                       </h3>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                         {categories.map((category) => (
@@ -748,13 +824,13 @@ const renderResults = (results, loading, error, type, progress = 0, currentStep 
                       <p className="text-gray-400 mb-2">
                         {selectedFile
                           ? selectedFile.name
-                          : dict[lang].noFileSelected}
+                          : dict.noFileSelected}
                       </p>
                       <button
                         type="button"
                         className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
                       >
-                        {dict[lang].selectFile}
+                        {dict.selectFile}
                       </button>
                       <p className="text-gray-500 text-sm mt-2">
                         {lang === "en"
@@ -772,10 +848,10 @@ const renderResults = (results, loading, error, type, progress = 0, currentStep 
                     {uploadLoading ? (
                       <div className="flex items-center gap-2 justify-center">
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        {dict[lang].loading}
+                        {dict.loading}
                       </div>
                     ) : (
-                      dict[lang].submit
+                      dict.submit
                     )}
                   </Button>
                 </form>
@@ -785,9 +861,8 @@ const renderResults = (results, loading, error, type, progress = 0, currentStep 
                   uploadLoading,
                   uploadError,
                   "upload",
-                   uploadProgress,
-                   uploadStep,
-                   lang 
+                  uploadProgress,
+                  uploadStep
                 )}
               </motion.div>
             )}
@@ -802,22 +877,22 @@ const renderResults = (results, loading, error, type, progress = 0, currentStep 
                 transition={{ duration: 0.2 }}
               >
                 {categoriesLoading ? (
-          <div className="flex justify-center items-center py-12">
-    <div className="text-center space-y-4">
-      <SpinnerWithPercentage progress={75} size="medium" />
-      <p className="text-gray-400">Loading categories...</p>
-    </div>
-  </div>
+                  <div className="flex justify-center items-center py-12">
+                    <div className="text-center space-y-4">
+                      <SpinnerWithPercentage progress={75} size="medium" currentLang={lang} />
+                      <p className="text-gray-400">Loading categories...</p>
+                    </div>
+                  </div>
                 ) : categoriesError ? (
                   <div className="text-center py-8 bg-red-900/30 rounded-xl border border-red-800/50">
                     <p className="text-lg font-medium text-red-300">
-                      {dict[lang].error}: {categoriesError}
+                      {dict.error}: {categoriesError}
                     </p>
                   </div>
                 ) : (
                   <>
                     <h3 className="text-xl font-semibold text-purple-300 mb-6">
-                      {dict[lang].selectCategory}
+                      {dict.selectCategory}
                     </h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
                       {categories.map((category) => (
@@ -839,7 +914,7 @@ const renderResults = (results, loading, error, type, progress = 0, currentStep 
                       <div className="mt-8">
                         <div className="flex justify-between items-center mb-6">
                           <h3 className="text-xl font-semibold text-purple-300">
-                            {dict[lang].categoryBooks}{" "}
+                            {dict.categoryBooks}{" "}
                             {
                               selectedCategory[
                                 lang === "en" ? "name" : "name_ar"
@@ -919,7 +994,7 @@ const renderResults = (results, loading, error, type, progress = 0, currentStep 
                                 </h4>
                                 {book.author && (
                                   <p className="text-xs text-gray-400 line-clamp-1">
-                                    {dict[lang].by} {book.author}
+                                    {dict.by} {book.author}
                                   </p>
                                 )}
                               </motion.div>
@@ -934,7 +1009,6 @@ const renderResults = (results, loading, error, type, progress = 0, currentStep 
             )}
           </AnimatePresence>
         </div>
-
       </div>
     </main>
   );

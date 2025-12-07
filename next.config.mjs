@@ -1,15 +1,12 @@
+// next.config.mjs
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'export',
-  trailingSlash: true,
+  reactStrictMode: true,
   images: {
-    unoptimized: true
+    unoptimized: true, // Required for static export
   },
-  // Add these for App Router static export
-  distDir: 'out',
-  experimental: {
-    appDir: true,
-  },
-}
+  trailingSlash: false,
+};
 
-export default nextConfig
+export default nextConfig;
