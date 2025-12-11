@@ -11,20 +11,31 @@ const AdminLogin = () => {
   const [error, setError] = useState("");
   const router = useRouter();
   
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+// In AdminLogin.jsx
+const handleLogin = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError("");
 
-    try {
-      const data = await api.adminLogin(username, password);
-      router.push("/admin/dashboard");
-    } catch (err) {
-      setError(err.message || "Invalid username or password");
-    } finally {
-      setLoading(false);
+  try {
+    const data = await api.adminLogin(username, password);
+    
+    // Store authentication token
+    if (data.token) {
+      localStorage.setItem('admin_token', data.token);
+      // Set token expiry (e.g., 24 hours)
+      const expiry = Date.now() + (24 * 60 * 60 * 1000);
+      localStorage.setItem('admin_token_expiry', expiry.toString());
+      localStorage.setItem('admin_username', username);
     }
-  };
+    
+    router.push("/admin/dashboard");
+  } catch (err) {
+    setError(err.message || "Invalid username or password");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
