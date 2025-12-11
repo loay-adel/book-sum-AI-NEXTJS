@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Header from '@/components/Header';
 import { useSingleBlog } from '@/lib/hooks/useBlogs';
@@ -8,11 +8,42 @@ import Image from 'next/image';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 
+// SVG data URL for fallback image (no external dependency)
+const PLACEHOLDER_SVG = `data:image/svg+xml,${encodeURIComponent(`
+  <svg xmlns="http://www.w3.org/2000/svg" width="300" height="450" viewBox="0 0 300 450">
+    <rect width="300" height="450" fill="#1f2937"/>
+    <rect x="50" y="50" width="200" height="350" fill="#374151" stroke="#4b5563" stroke-width="2"/>
+    <text x="150" y="180" text-anchor="middle" fill="#9ca3af" font-family="Arial" font-size="24">Book Cover</text>
+    <text x="150" y="220" text-anchor="middle" fill="#6b7280" font-family="Arial" font-size="16">No image available</text>
+  </svg>
+`)}`;
 
+// Fix: Create a safe image URL function
+const getSafeImageUrl = (url) => {
+  if (!url) return PLACEHOLDER_SVG;
+  
+  // Check if URL is valid
+  try {
+    const parsedUrl = new URL(url);
+    
+    // Check if it's a problematic placeholder URL
+    if (parsedUrl.hostname.includes('via.placeholder.com')) {
+      // Use data URL instead to avoid DNS issues
+      return PLACEHOLDER_SVG;
+    }
+    
+    return url;
+  } catch {
+    // If it's a relative path or invalid URL
+    if (url.startsWith('/')) {
+      return url; // Let Next.js handle relative paths
+    }
+    return PLACEHOLDER_SVG;
+  }
+};
 
 const BlogDetailClientComponent = ({ slug }) => {
   const params = useParams();
-
   const blogSlug = slug || params?.slug;
   
   const { blog, loading, error, likeBlog, addComment } = useSingleBlog(blogSlug);
@@ -20,18 +51,18 @@ const BlogDetailClientComponent = ({ slug }) => {
   const [comment, setComment] = useState('');
   const [username, setUsername] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
-  
   const [showShareMenu, setShowShareMenu] = useState(false);
 
-  const handleLike = async () => {
+  // Memoize handlers for performance
+  const handleLike = useCallback(async () => {
     try {
       await likeBlog();
     } catch (error) {
       console.error('Error liking blog:', error);
     }
-  };
+  }, [likeBlog]);
 
-  const handleSubmitComment = async (e) => {
+  const handleSubmitComment = useCallback(async (e) => {
     e.preventDefault();
     if (!comment.trim()) return;
     
@@ -45,10 +76,10 @@ const BlogDetailClientComponent = ({ slug }) => {
     } finally {
       setSubmittingComment(false);
     }
-  };
+  }, [comment, username, addComment]);
 
-  const shareBlog = async (platform) => {
-    const url = window.location.href;
+  const shareBlog = useCallback(async (platform) => {
+    const url = typeof window !== 'undefined' ? window.location.href : '';
     const title = blog?.title || 'Check out this book summary!';
     
     const shareUrls = {
@@ -59,13 +90,30 @@ const BlogDetailClientComponent = ({ slug }) => {
       telegram: `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`
     };
     
-    if (shareUrls[platform]) {
+    if (shareUrls[platform] && typeof window !== 'undefined') {
       window.open(shareUrls[platform], '_blank', 'noopener,noreferrer');
     }
     
     setShowShareMenu(false);
-  };
+  }, [blog]);
 
+  // Fix: Get safe image URL
+  const safeThumbnailUrl = useMemo(() => {
+    if (!blog?.bookDetails?.thumbnail) return PLACEHOLDER_SVG;
+    return getSafeImageUrl(blog.bookDetails.thumbnail);
+  }, [blog]);
+
+  // Memoize formatted date
+  const formattedDate = useMemo(() => {
+    if (!blog?.createdAt) return '';
+    return new Date(blog.createdAt).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }, [blog]);
+
+  // Early return for loading state
   if (loading) {
     return (
       <>
@@ -81,6 +129,7 @@ const BlogDetailClientComponent = ({ slug }) => {
     );
   }
 
+  // Early return for error state
   if (error || !blog) {
     return (
       <>
@@ -114,26 +163,26 @@ const BlogDetailClientComponent = ({ slug }) => {
           <div className="absolute inset-0 bg-gradient-to-r from-blue-900/20 via-purple-900/20 to-gray-900" />
           <div className="max-w-4xl mx-auto px-4 py-12 relative">
             <div className="flex flex-col md:flex-row gap-8 items-start">
-              {/* Book Cover */}
-              {blog.bookDetails?.thumbnail && (
-                <div className="w-full md:w-1/3">
-                  <div className="relative aspect-[2/3] rounded-xl overflow-hidden shadow-2xl">
-<Image
-  src={blog.bookDetails.thumbnail}
-  alt={blog.bookDetails.title}
-  fill
-  className="object-cover group-hover:scale-105 transition duration-500"
-  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-/>
-                  </div>
+              {/* Book Cover - Always show something */}
+              <div className="w-full md:w-1/3">
+                <div className="relative aspect-[2/3] rounded-xl overflow-hidden shadow-2xl">
+                  <Image
+                    src={safeThumbnailUrl}
+                    alt={blog.bookDetails?.title || 'Book cover'}
+                    fill
+                    priority // Critical for LCP - this is the main image
+                    className="object-cover transition duration-500"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    unoptimized={safeThumbnailUrl === PLACEHOLDER_SVG} // Don't optimize data URLs
+                  />
                 </div>
-              )}
+              </div>
 
               {/* Blog Info */}
               <div className="flex-1">
                 {/* Category */}
                 <span className="inline-block px-4 py-1 text-sm bg-gradient-to-r from-blue-900/50 to-purple-900/50 rounded-full mb-4">
-                  {blog.category}
+                  {blog.category || 'Uncategorized'}
                 </span>
 
                 {/* Title */}
@@ -177,11 +226,7 @@ const BlogDetailClientComponent = ({ slug }) => {
                     <div>
                       <p className="font-medium">{blog.user?.username || 'Anonymous'}</p>
                       <p className="text-sm text-gray-400">
-                        {new Date(blog.createdAt).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
+                        {formattedDate}
                       </p>
                     </div>
                   </div>
@@ -194,12 +239,13 @@ const BlogDetailClientComponent = ({ slug }) => {
                           ? 'bg-red-900/30 text-red-400'
                           : 'bg-gray-800 hover:bg-gray-700'
                       }`}
+                      aria-label="Like this post"
                     >
                       <span className="text-xl">♥</span>
                       <span>{blog.likesCount || 0}</span>
                     </button>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2" aria-label="Views">
                       <span className="text-xl">👁️</span>
                       <span>{blog.views || 0}</span>
                     </div>
@@ -208,6 +254,7 @@ const BlogDetailClientComponent = ({ slug }) => {
                       <button
                         onClick={() => setShowShareMenu(!showShareMenu)}
                         className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition duration-200"
+                        aria-label="Share options"
                       >
                         <span className="text-xl">↗</span>
                         <span>Share</span>
@@ -218,6 +265,7 @@ const BlogDetailClientComponent = ({ slug }) => {
                           <button
                             onClick={() => shareBlog('twitter')}
                             className="w-full px-4 py-3 text-left hover:bg-gray-700 rounded-t-lg flex items-center gap-3"
+                            aria-label="Share on Twitter"
                           >
                             <span className="text-blue-400">𝕏</span>
                             Twitter
@@ -225,6 +273,7 @@ const BlogDetailClientComponent = ({ slug }) => {
                           <button
                             onClick={() => shareBlog('facebook')}
                             className="w-full px-4 py-3 text-left hover:bg-gray-700 flex items-center gap-3"
+                            aria-label="Share on Facebook"
                           >
                             <span className="text-blue-500">f</span>
                             Facebook
@@ -232,6 +281,7 @@ const BlogDetailClientComponent = ({ slug }) => {
                           <button
                             onClick={() => shareBlog('linkedin')}
                             className="w-full px-4 py-3 text-left hover:bg-gray-700 flex items-center gap-3"
+                            aria-label="Share on LinkedIn"
                           >
                             <span className="text-blue-300">in</span>
                             LinkedIn
@@ -239,6 +289,7 @@ const BlogDetailClientComponent = ({ slug }) => {
                           <button
                             onClick={() => shareBlog('whatsapp')}
                             className="w-full px-4 py-3 text-left hover:bg-gray-700 flex items-center gap-3"
+                            aria-label="Share on WhatsApp"
                           >
                             <span className="text-green-500">✓</span>
                             WhatsApp
@@ -246,6 +297,7 @@ const BlogDetailClientComponent = ({ slug }) => {
                           <button
                             onClick={() => shareBlog('telegram')}
                             className="w-full px-4 py-3 text-left hover:bg-gray-700 rounded-b-lg flex items-center gap-3"
+                            aria-label="Share on Telegram"
                           >
                             <span className="text-blue-400">✈</span>
                             Telegram
@@ -279,30 +331,38 @@ const BlogDetailClientComponent = ({ slug }) => {
         {/* Content */}
         <div className="max-w-4xl mx-auto px-4 pb-16">
           {/* AI Summary */}
-<div className="mb-12">
-  <div className="flex items-center gap-3 mb-6">
-    <div className="w-3 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
-    <h2 className="text-2xl font-bold">AI Summary</h2>
-  </div>
-  <div className="p-6 bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-xl border border-gray-700">
-    <div className="prose prose-lg prose-invert max-w-none text-gray-200 leading-relaxed">
-      <ReactMarkdown>{blog.aiResponse || blog.summary}</ReactMarkdown>
-    </div>
-  </div>
-</div>
+          <div className="mb-12">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-3 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
+              <h2 className="text-2xl font-bold">AI Summary</h2>
+            </div>
+            <div className="p-6 bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-xl border border-gray-700">
+              <div className="prose prose-lg prose-invert max-w-none text-gray-200 leading-relaxed">
+                {blog.aiResponse || blog.summary ? (
+                  <ReactMarkdown>{blog.aiResponse || blog.summary}</ReactMarkdown>
+                ) : (
+                  <p className="text-gray-400 italic">No AI summary available.</p>
+                )}
+              </div>
+            </div>
+          </div>
 
           {/* Full Content */}
-<div className="mb-12">
-  <div className="flex items-center gap-3 mb-6">
-    <div className="w-3 h-8 bg-gradient-to-b from-green-500 to-blue-500 rounded-full"></div>
-    <h2 className="text-2xl font-bold">Full Analysis</h2>
-  </div>
-  <div className="p-6 bg-gray-800/30 rounded-xl border border-gray-700">
-    <div className="prose prose-lg prose-invert max-w-none text-gray-300 leading-relaxed">
-      <ReactMarkdown>{blog.content}</ReactMarkdown>
-    </div>
-  </div>
-</div>
+          <div className="mb-12">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-3 h-8 bg-gradient-to-b from-green-500 to-blue-500 rounded-full"></div>
+              <h2 className="text-2xl font-bold">Full Analysis</h2>
+            </div>
+            <div className="p-6 bg-gray-800/30 rounded-xl border border-gray-700">
+              <div className="prose prose-lg prose-invert max-w-none text-gray-300 leading-relaxed">
+                {blog.content ? (
+                  <ReactMarkdown>{blog.content}</ReactMarkdown>
+                ) : (
+                  <p className="text-gray-400 italic">No content available.</p>
+                )}
+              </div>
+            </div>
+          </div>
 
           {/* Comments Section */}
           <div className="mb-12">
@@ -322,6 +382,7 @@ const BlogDetailClientComponent = ({ slug }) => {
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="Your name (optional)"
                     className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    aria-label="Your name"
                   />
                 </div>
                 <div className="mb-4">
@@ -331,12 +392,14 @@ const BlogDetailClientComponent = ({ slug }) => {
                     placeholder="Share your thoughts about this book summary..."
                     rows="4"
                     className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    aria-label="Your comment"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={submittingComment || !comment.trim()}
                   className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-700 hover:to-purple-700 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Post comment"
                 >
                   {submittingComment ? 'Posting...' : 'Post Comment'}
                 </button>
@@ -390,6 +453,7 @@ const BlogDetailClientComponent = ({ slug }) => {
                     key={relatedBlog._id}
                     href={`/blogs/${relatedBlog.slug}`}
                     className="group"
+                    aria-label={`Read ${relatedBlog.title}`}
                   >
                     <div className="p-6 bg-gray-800/30 rounded-xl border border-gray-700 hover:border-blue-500 transition duration-300">
                       <h3 className="text-lg font-semibold mb-2 group-hover:text-blue-400 transition duration-200">

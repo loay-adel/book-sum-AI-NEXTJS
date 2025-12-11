@@ -4,11 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && node utils/fix-404.js",
-    "export": "next build && next export && node utils/fix-404.js",
-    "postbuild": "next-sitemap",
+    "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "build:prod": "NODE_ENV=production npm run build",
+    "deploy": "npm run build && pm2 restart ziad-ai || pm2 start npm --name \"ziad-ai\" -- start"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
