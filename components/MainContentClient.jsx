@@ -133,150 +133,40 @@ export const MainContentClient = ({ initialLang }) => {
   const dict = getDict();
 
 
-const handleAutoSaveBlog = async (results, type = 'search') => {
-  console.log('handleAutoSaveBlog called with:', { results, type });
-  
-  if (!results?.book || !results?.summary) {
-    console.log('Missing book or summary data');
-    return;
-  }
 
-  try {
-    const aiResponse = results.summary;
-    const title = `${results.book.title} Summary`;
-    const content = `AI-generated summary for "${results.book.title}" by ${results.book.author || 'Unknown Author'}`;
-    
-    const blogData = {
-      title,
-      content,
-      aiResponse,
-      bookDetails: {
-        title: results.book.title,
-        author: results.book.author || 'Unknown',
-        thumbnail: results.book.thumbnail || null
-      },
-      tags: ['AI Summary', 'Book Summary', results.book.genre || 'General'],
-      category: 'AI Generated Summaries',
-      language: lang,
-      isPublished: true,
-      featured: false
-    };
-
-    console.log('Saving blog data:', blogData);
-
-    let response;
-    if (type === 'search') {
-      response = await api.saveAISummaryAsBlog(blogData);
-    } else if (type === 'upload') {
-      response = await api.savePDFSummaryAsBlog({
-        ...blogData,
-        generationType: 'pdf_summary'
-      });
-    }
-
-    console.log('Blog save response:', response);
-    
-    // Show success message
-    const successMessage = lang === 'en' 
-      ? 'Summary saved as blog post!' 
-      : 'تم حفظ الملخص كمنشور مدونة!';
-    
-    console.log(successMessage);
-    
-    // Optional: Show toast notification
-    alert(successMessage);
-    
-  } catch (error) {
-    console.error('Failed to auto-save as blog:', error);
-    console.error('Error details:', error.message);
-  }
-};
 
 const handleSearch = async (e) => {
   e.preventDefault();
+
+  
   if (searchQuery.trim()) {
-    const startTime = Date.now();
     try {
+
       await searchBook(searchQuery);
-      const responseTime = Date.now() - startTime;
-      
-      // Track successful search
-      await addSearch(
-        searchQuery, 
-        searchResults, 
-        true, 
-        responseTime
-      );
-      
-      // Auto-save the summary if results are good
-      if (searchResults?.book && searchResults?.summary) {
-        // Save to user's summaries
-        await handleSaveSummary(searchResults, 'search');
-        // Also save as blog post
-        await handleAutoSaveBlog(searchResults, 'search');
-      }
+
     } catch (error) {
-      const responseTime = Date.now() - startTime;
-      await addSearch(
-        searchQuery, 
-        null, 
-        false, 
-        responseTime
-      );
+
     }
   }
+
 };
+
 
 const handleFileUpload = async (e) => {
   e.preventDefault();
   if (selectedFile) {
-    const startTime = Date.now();
     try {
+
       await uploadFile(selectedFile);
-      const responseTime = Date.now() - startTime;
-      
-      await addSearch(
-        `PDF Upload: ${selectedFile.name}`,
-        uploadResults,
-        true,
-        responseTime
-      );
-      
-      // Auto-save the summary
-      if (uploadResults?.book && uploadResults?.summary) {
-        // Save to user's summaries
-        await handleSaveSummary(uploadResults, 'upload');
-        // Also save as blog post
-        await handleAutoSaveBlog(uploadResults, 'upload');
-      }
+
     } catch (error) {
-      const responseTime = Date.now() - startTime;
-      await addSearch(
-        `PDF Upload: ${selectedFile.name}`,
-        null,
-        false,
-        responseTime
-      );
+      console.log('❌ Upload failed:', error);
     }
   }
 };
+
   
 
-  const handleSaveSummary = async (results, type = 'search') => {
-    if (results?.book && results?.summary) {
-      try {
-        await saveSummary(
-          results.book,
-          results.summary,
-          type,
-          results.amazonLink,
-          results.recommendations || []
-        );
-      } catch (error) {
-        console.error('Failed to save summary:', error);
-      }
-    }
-  };
 
   const copySummary = async () => {
     const results = searchResults || uploadResults;
@@ -605,7 +495,7 @@ ${(results.recommendations || []).map(book => `• ${book.title} ${dict.by} ${bo
             onClick={copySummary}
             variant="outline"
             size="sm"
-            className="bg-gray-800 hover:bg-gray-700 border-gray-700"
+            className="bg-gray-800 hover:bg-gray-700 border-gray-700 text-white"
           >
             <Clipboard className="w-4 h-4 mr-2" />
             {dict.copySummary}
@@ -615,7 +505,7 @@ ${(results.recommendations || []).map(book => `• ${book.title} ${dict.by} ${bo
             onClick={downloadSummary}
             variant="outline"
             size="sm"
-            className="bg-gray-800 hover:bg-gray-700 border-gray-700"
+            className="bg-gray-800 hover:bg-gray-700 border-gray-700 text-white"
           >
             <Download className="w-4 h-4 mr-2" />
             {dict.downloadSummary}

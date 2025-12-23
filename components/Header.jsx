@@ -56,7 +56,7 @@ const Header = () => {
   const isActive = (path) => pathname === path || pathname.startsWith(`${path}/`);
 
   const navLinks = [
-    { href: "/", label: "home", icon: <FiHome className="w-4 h-4" /> },
+    { href: "/main", label: "home", icon: <FiHome className="w-4 h-4" /> },
     { href: "/blogs", label: "blog", icon:  <ImBlog className="w-4 h-4"/> },
     { href: "/about", label: "about", icon: <FiInfo className="w-4 h-4" /> },
     { href: "/contact", label: "contact", icon: <FiMail className="w-4 h-4" /> },

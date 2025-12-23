@@ -1,15 +1,15 @@
 import Header from "./Header";
-import Footer from "./Footer";
-import { MainContentClient } from './MainContentClient';
+import ClientContentExtra from "./ClientContentExtra";
 
 export default function MainLayout({ children }) {
   return (
     <>
       <Header />
-      <main className="min-h-screen">
-        <MainContentClient /> 
+      <main >
+
+        <ClientContentExtra/>
       </main>
-      <Footer />
+
     </>
   );
 }

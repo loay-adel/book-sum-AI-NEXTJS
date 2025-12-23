@@ -10,7 +10,6 @@ export default function MainLayout({ children }) {
   return (
     <div className="min-h-screen">
         <Header/>
-      {/* Add any navigation, sidebar, or header specific to main functionality */}
       <main className="py-9">
         {children}
       </main>

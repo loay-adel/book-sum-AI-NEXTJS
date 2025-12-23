@@ -14,6 +14,23 @@ const nextConfig = {
     ],
   },
 
+    
+  // Enable compression
+  compress: true,
+  
+  // Optimize production builds
+  swcMinify: true,
+  
+  // SEO: Add trailing slashes
+  trailingSlash: true,
+  
+  // Internationalized Routing
+  i18n: {
+    locales: ['en', 'ar'],
+    defaultLocale: 'en',
+    localeDetection: true,
+  },
+
   // Security headers
   async headers() {
     return [
