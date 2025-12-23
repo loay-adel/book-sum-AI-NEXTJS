@@ -6,32 +6,31 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'covers.openlibrary.org',
+        pathname: '/**',  // This allows all paths
       },
       {
         protocol: 'https',
         hostname: 'via.placeholder.com',
+        pathname: '/**',
       },
     ],
+    // Important: Allow unoptimized images from external domains
+    unoptimized: false, // Keep as false for optimization, but ensure domains are allowed
   },
-
-    
-  // Enable compression
-  compress: true,
   
-  // Optimize production builds
+  // Disable trailing slash for better API routing
+  trailingSlash: false,
+  
+  // Keep other configurations
+  compress: true,
   swcMinify: true,
   
-  // SEO: Add trailing slashes
-  trailingSlash: true,
-  
-  // Internationalized Routing
   i18n: {
     locales: ['en', 'ar'],
     defaultLocale: 'en',
     localeDetection: true,
   },
 
-  // Security headers
   async headers() {
     return [
       {
