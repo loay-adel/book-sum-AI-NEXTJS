@@ -639,7 +639,7 @@ const BlogsPage = () => {
                           <Link href={`/blogs/${blog.slug}`} className="block">
                             <div className="relative w-full pt-[150%] overflow-hidden">
                               <div className="absolute inset-0">
-                                <Image
+                                <img
                                   src={blog.safeThumbnail}
                                   alt={blog.bookDetails?.title || t.bookCover}
                                   fill
