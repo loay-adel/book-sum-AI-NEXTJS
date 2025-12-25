@@ -6,15 +6,25 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'covers.openlibrary.org',
-        pathname: '/**',  // This allows all paths
+        pathname: '/**',  
       },
       {
         protocol: 'https',
         hostname: 'via.placeholder.com',
         pathname: '/**',
       },
+            {
+        protocol: 'https',
+        hostname: 'dummyimage.com',
+        pathname: '/**',
+      },
+
+      {
+        protocol: 'https',
+        hostname: 'https://api.booksummarizer.net',
+        pathname: '/**',
+      },
     ],
-    // Important: Allow unoptimized images from external domains
     unoptimized: false, // Keep as false for optimization, but ensure domains are allowed
   },
   
