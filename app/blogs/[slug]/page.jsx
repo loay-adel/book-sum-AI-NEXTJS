@@ -230,8 +230,8 @@ const BlogDetailClientComponent = ({ slug }) => {
 
   // Get safe image URL
   const safeThumbnailUrl = useMemo(() => {
-    if (!blog?.bookDetails?.thumbnail) return PLACEHOLDER_SVG;
-    return getSafeImageUrl(blog.bookDetails.thumbnail);
+    if (!blog?.bookDetails?.safeThumbnail) return PLACEHOLDER_SVG;
+    return getSafeImageUrl(blog.bookDetails.safeThumbnail);
   }, [blog]);
 
   // Memoize formatted date

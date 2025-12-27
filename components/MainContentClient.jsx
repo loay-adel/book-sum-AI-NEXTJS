@@ -952,6 +952,75 @@ ${(results.recommendations || []).map(book => `• ${book.title} ${dict.by} ${bo
             )}
           </AnimatePresence>
         </div>
+        {/* قسم تعليمي لتحسين SEO ونسبة النص */}
+<section className="mt-24 max-w-5xl mx-auto px-4 border-t border-gray-800 pt-16">
+  <div className="grid md:grid-cols-2 gap-12 items-start">
+    <div className="space-y-6">
+      <h2 className="text-3xl font-bold text-white">
+        {lang === "en" ? "Elevate Your Learning with AI Summaries" : "ارتقِ بتعليمك مع ملخصات الذكاء الاصطناعي"}
+      </h2>
+      <p className="text-gray-400 leading-relaxed">
+        {lang === "en" 
+          ? "Our platform leverages advanced Natural Language Processing to distill complex manuscripts into actionable insights. This methodology isn't just about shortening text; it's about identifying semantic patterns and core arguments that define a book's unique value proposition."
+          : "تعتمد منصتنا على معالجة اللغات الطبيعية المتقدمة لتقطير المخطوطات المعقدة وتحويلها إلى رؤى قابلة للتنفيذ. هذه المنهجية لا تقتصر فقط على تقصير النص، بل تتعلق بتحديد الأنماط الدلالية والحجج الأساسية التي تحدد قيمة الكتاب الفريدة."}
+      </p>
+    </div>
+    
+    <div className="bg-gray-800/30 p-8 rounded-3xl border border-gray-700/50 backdrop-blur-sm">
+      <h3 className="text-xl font-semibold text-purple-400 mb-4">
+        {lang === "en" ? "How to use these summaries?" : "كيف تستخدم هذه الملخصات؟"}
+      </h3>
+      <ul className="space-y-4 text-gray-300">
+        <li className="flex gap-3">
+          <span className="text-blue-500 font-bold">01.</span>
+          <p>{lang === "en" ? "Pre-reading: Get an overview before committing to the full book." : "القراءة التمهيدية: احصل على نظرة عامة قبل الالتزام بقراءة الكتاب كاملاً."}</p>
+        </li>
+        <li className="flex gap-3">
+          <span className="text-blue-500 font-bold">02.</span>
+          <p>{lang === "en" ? "Review: Refresh your memory on key concepts of books you've already read." : "المراجعة: جدد ذاكرتك حول المفاهيم الأساسية للكتب التي قرأتها بالفعل."}</p>
+        </li>
+        <li className="flex gap-3">
+          <span className="text-blue-500 font-bold">03.</span>
+          <p>{lang === "en" ? "Decision Making: Quickly compare different perspectives on a single topic." : "اتخاذ القرار: قارن بسرعة بين وجهات نظر مختلفة حول موضوع واحد."}</p>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+<section className="mt-20 mb-10 max-w-5xl mx-auto px-4">
+  <div className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 p-8 rounded-3xl border border-white/5">
+    <h3 className="text-2xl font-bold text-white mb-6 text-center">
+      {lang === "en" ? "Deep Dive into our Technology" : "تعمق في تقنيتنا"}
+    </h3>
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div>
+        <h4 className="text-blue-400 font-medium mb-2">{lang === "en" ? "Contextual Awareness" : "الوعي بالسياق"}</h4>
+        <p className="text-sm text-gray-500">
+          {lang === "en" ? "Our AI preserves the author's tone while extracting core meanings from your uploaded documents." : "يحافظ ذكاؤنا الاصطناعي على نبرة المؤلف أثناء استخراج المعاني الجوهرية من مستنداتك المرفوعة."}
+        </p>
+      </div>
+      <div>
+        <h4 className="text-purple-400 font-medium mb-2">{lang === "en" ? "Vectorized Search" : "البحث المتجهي"}</h4>
+        <p className="text-sm text-gray-500">
+          {lang === "en" ? "Searching for books uses semantic similarity, ensuring you find what you need even with vague titles." : "البحث عن الكتب يستخدم التشابه الدلالي، مما يضمن العثور على ما تحتاجه حتى مع العناوين الغامضة."}
+        </p>
+      </div>
+      <div>
+        <h4 className="text-green-400 font-medium mb-2">{lang === "en" ? "Multi-format Extraction" : "استخراج متعدد الصيغ"}</h4>
+        <p className="text-sm text-gray-500">
+          {lang === "en" ? "Optimized parsing for PDF structures, including headers, footnotes, and main body text." : "تحليل محسن لهياكل PDF، بما في ذلك العناوين والحواشي السفلية ومتن النص الرئيسي."}
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+<footer className="mt-16 text-center text-gray-600 text-xs pb-12">
+  <p className="max-w-2xl mx-auto leading-relaxed">
+    {lang === "en" 
+      ? "Book Summarizer is a comprehensive digital library management tool. It combines the power of large language models with a user-friendly interface to provide high-quality document analysis, book discovery, and knowledge retention services for researchers and avid readers worldwide."
+      : "ملخص الكتب هو أداة شاملة لإدارة المكتبة الرقمية. فهو يجمع بين قوة النماذج اللغوية الكبيرة وواجهة سهلة الاستخدام لتوفير تحليل مستندات عالي الجودة، واكتشاف الكتب، وخدمات الاحتفاظ بالمعرفة للباحثين والقراء الشغوفين حول العالم."}
+  </p>
+</footer>
       </div>
     </main>
   );
