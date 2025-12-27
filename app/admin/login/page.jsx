@@ -12,59 +12,28 @@ const AdminLogin = () => {
   const [error, setError] = useState("");
   const router = useRouter();
   
-// In your page.jsx or admin login component
-const handleLogin = async (e) => {
-  e.preventDefault();
-  
-  try {
-    console.log('Attempting admin login...');
-    
-    const response = await fetch(`${API_BASE}/api/admin/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ username, password }),
-      credentials: 'include' // CRITICAL: Send cookies
-    });
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
-    console.log('Login response status:', response.status);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Login failed:', errorText);
-      throw new Error('Login failed. Please check your credentials.');
+    try {
+      console.log('Attempting admin login...');
+      const data = await api.adminLogin(username, password);
+      
+      if (data.success) {
+        console.log('Login successful, redirecting to dashboard...');
+        router.push("/admin/dashboard");
+      } else {
+        setError(data.message || "Login failed");
+      }
+    } catch (err) {
+      console.error('Login error details:', err);
+      setError(err.message || "Invalid username or password. Please check your credentials.");
+    } finally {
+      setLoading(false);
     }
-
-    const data = await response.json();
-    console.log('Login successful:', data);
-    
-    // Set authentication flags
-    localStorage.setItem('admin_logged_in', 'true');
-    localStorage.setItem('admin_username', username);
-    
-    // Small delay to ensure cookies are set
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    // Verify session
-    const verifyResponse = await fetch(`${API_BASE}/api/admin/verify-token`, {
-      method: 'GET',
-      credentials: 'include'
-    });
-    
-    if (!verifyResponse.ok) {
-      throw new Error('Session verification failed');
-    }
-    
-    console.log('Session verified, redirecting...');
-    window.location.href = '/admin/dashboard';
-    
-  } catch (error) {
-    console.error('Login error:', error);
-    setError(error.message);
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
