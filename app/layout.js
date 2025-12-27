@@ -161,7 +161,7 @@ export default function RootLayout({ children }) {
             })
           }}
         /> }
-
+    
         <LanguageProvider>
           {children}
         </LanguageProvider>

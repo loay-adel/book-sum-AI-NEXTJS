@@ -1,5 +1,6 @@
 import Header from "./Header";
-import ClientContentExtra from "./ClientContentExtra";
+
+import { MainContentClient } from "./MainContentClient";
 
 export default function MainLayout({ children }) {
   return (
@@ -7,7 +8,7 @@ export default function MainLayout({ children }) {
       <Header />
       <main >
 
-        <ClientContentExtra/>
+        <MainContentClient/>
       </main>
 
     </>

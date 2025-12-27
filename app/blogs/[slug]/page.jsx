@@ -230,8 +230,8 @@ const BlogDetailClientComponent = ({ slug }) => {
 
   // Get safe image URL
   const safeThumbnailUrl = useMemo(() => {
-    if (!blog?.bookDetails?.safeThumbnail) return PLACEHOLDER_SVG;
-    return getSafeImageUrl(blog.bookDetails.safeThumbnail);
+    if (!blog?.bookDetails?.Thumbnail) return PLACEHOLDER_SVG;
+    return getSafeImageUrl(blog.bookDetails.Thumbnail);
   }, [blog]);
 
   // Memoize formatted date
@@ -498,6 +498,7 @@ const BlogDetailClientComponent = ({ slug }) => {
     );
   }
 
+  
   return (
     <>
       <Head>
@@ -551,7 +552,7 @@ const BlogDetailClientComponent = ({ slug }) => {
                   <div className="sticky top-24">
                     <div className="relative aspect-[2/3] rounded-xl overflow-hidden shadow-2xl bg-gray-800">
                       <Image
-                        src={safeThumbnailUrl}
+                        src={blog.bookDetails?.thumbnail}
                         alt={blog.bookDetails?.title || 'Book cover'}
                         fill
                         priority
