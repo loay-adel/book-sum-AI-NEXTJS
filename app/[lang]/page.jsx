@@ -1,5 +1,4 @@
-// app/[lang]/page.jsx
-import Header from '@/components/Header';
+
 import {MainContentClient} from '@/components/MainContentClient';
 import { getDictionary } from '@/dictionaries';
 
@@ -39,8 +38,7 @@ export default async function Home({ params }) {
 
    
     return(<> 
-    
-       <Header lang={lang} />
+  
     <MainContentClient lang={lang} dictionary={dictionary} />;</>)
   } catch (error) {
     console.error('Error loading page:', error);

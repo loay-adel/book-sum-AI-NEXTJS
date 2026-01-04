@@ -9,7 +9,6 @@ import ReactMarkdown from "react-markdown";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUserData } from '@/lib/hooks/useUserData';
 import {  ExternalLink, Download, Clipboard } from 'lucide-react';
-import { api } from '@/lib/api';
 import Header from "./Header";
 
 const contentDict = {
@@ -94,13 +93,6 @@ export const MainContentClient = ({ lang = "en", dictionary }) => {
     setIsMounted(true);
   }, []);
   
-  const { 
-    addSearch, 
-    saveSummary, 
-    searchHistory, 
-    savedSummaries,
-    userData 
-  } = useUserData();
   
   // Use your custom hooks
   const {
@@ -130,7 +122,26 @@ export const MainContentClient = ({ lang = "en", dictionary }) => {
     selectCategory,
   } = useCategories(lang);
 
+    const { 
+    addSearch, 
+    saveBook, 
+    trackInteraction 
+  } = useUserData();
+
   const dict = dictionary?.home || contentDict[lang] || contentDict.en;
+
+
+  useEffect(() => {
+    setIsMounted(true);
+    // Track page view
+    if (trackInteraction) {
+      trackInteraction('page_view', {
+        page: 'home',
+        language: lang
+      });
+    }
+  }, [trackInteraction, lang]);
+  
 
     if (!isMounted) {
     return (
