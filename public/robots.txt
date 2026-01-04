@@ -1,9 +1,0 @@
-# *
-User-agent: *
-Allow: /
-
-# Host
-Host: https://booksummarizer.net
-
-# Sitemaps
-Sitemap: https://booksummarizer.net/sitemap.xml
