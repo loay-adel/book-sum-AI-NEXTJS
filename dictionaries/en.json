@@ -1,0 +1,50 @@
+{
+  "common": {
+    "home": "Home",
+    "about": "About Us",
+    "contact": "Contact",
+    "privacyPolicy": "Privacy",
+    "blog": "Blog"
+  },
+  "home": {
+    "title": "Book Summarizer",
+    "subtitle": "AI-Powered Book Insights",
+    "libraryTitle": "Book Summarizer",
+    "librarySubtitle": "Discover, read and explore thousands of books with AI-powered summaries",
+    "search": "Search Book",
+    "upload": "Upload PDF",
+    "categories": "Categories",
+    "placeholder": "Enter book name...",
+    "submit": "Submit",
+    "searchResults": "Search Results",
+    "uploadResults": "PDF Summary",
+    "categoryBooks": "Books in",
+    "buyLink": "Buy this book",
+    "recommendations": "Recommendations",
+    "loading": "Loading...",
+    "error": "Error",
+    "selectCategory": "Select a category",
+    "noFileSelected": "No file selected",
+    "selectFile": "Select PDF file",
+    "summary": "Summary",
+    "by": "by",
+    "quickActions": "Quick Actions",
+    "popularCategories": "Popular Categories",
+    "recentlyAdded": "Recently Added",
+    "trendingNow": "Trending Now",
+    "processing": "Processing...",
+    "searching": "Searching",
+    "finalizing": "Finalizing",
+    "copySummary": "Copy Summary",
+    "downloadSummary": "Download Summary",
+    "saveForLater": "Save for Later",
+    "waiting": "Waiting...",
+    "complete": "Complete!",
+    "tryAgain": "Try Again"
+  },
+  "seo": {
+    "title": "Book Summarizer - Get Smart Book Summaries",
+    "description": "Get smart and detailed book summaries powered by AI",
+    "keywords": "book summary, AI, reading, learning"
+  }
+}

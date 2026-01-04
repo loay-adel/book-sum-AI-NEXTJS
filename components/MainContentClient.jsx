@@ -1,6 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
-import { useLanguage } from "@/lib/context/LanguageContext";
+import { useState, useRef, useEffect } from "react";
 import { useBookSearch } from "@/lib/hooks/useBookSearch";
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
 import { useCategories } from "@/lib/hooks/useCategories";
@@ -11,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useUserData } from '@/lib/hooks/useUserData';
 import {  ExternalLink, Download, Clipboard } from 'lucide-react';
 import { api } from '@/lib/api';
+import Header from "./Header";
 
 const contentDict = {
   en: {
@@ -81,12 +81,18 @@ const contentDict = {
   }
 };
 
-export const MainContentClient = ({ initialLang }) => {
-  const { lang } = useLanguage();
+export const MainContentClient = ({ lang = "en", dictionary }) => { 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("search");
   const [selectedFile, setSelectedFile] = useState(null);
+  const [isMounted, setIsMounted] = useState(false);
   const fileInputRef = useRef(null);
+  
+
+
+    useEffect(() => {
+    setIsMounted(true);
+  }, []);
   
   const { 
     addSearch, 
@@ -104,7 +110,7 @@ export const MainContentClient = ({ initialLang }) => {
     progress: searchProgress,
     error: searchError,
     searchBook,
-  } = useBookSearch();
+  } = useBookSearch(lang);
   
   const {
     results: uploadResults,
@@ -113,7 +119,7 @@ export const MainContentClient = ({ initialLang }) => {
     progress: uploadProgress,
     error: uploadError,
     uploadFile,
-  } = useFileUpload();
+  } = useFileUpload(lang);
   
   const {
     categories,
@@ -122,51 +128,40 @@ export const MainContentClient = ({ initialLang }) => {
     loading: categoriesLoading,
     error: categoriesError,
     selectCategory,
-  } = useCategories();
+  } = useCategories(lang);
 
-  // Safely get dictionary for current language
-  const getDict = () => {
-    const currentLang = lang || initialLang || 'en';
-    return contentDict[currentLang] || contentDict.en;
+  const dict = dictionary?.home || contentDict[lang] || contentDict.en;
+
+    if (!isMounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    
+    if (searchQuery.trim()) {
+      try {
+        await searchBook(searchQuery);
+      } catch (error) {
+        console.log('❌ Search failed:', error);
+      }
+    }
   };
 
-  const dict = getDict();
-
-
-
-
-const handleSearch = async (e) => {
-  e.preventDefault();
-
-  
-  if (searchQuery.trim()) {
-    try {
-
-      await searchBook(searchQuery);
-
-    } catch (error) {
-
+  const handleFileUpload = async (e) => {
+    e.preventDefault();
+    if (selectedFile) {
+      try {
+        await uploadFile(selectedFile);
+      } catch (error) {
+        console.log('❌ Upload failed:', error);
+      }
     }
-  }
-
-};
-
-
-const handleFileUpload = async (e) => {
-  e.preventDefault();
-  if (selectedFile) {
-    try {
-
-      await uploadFile(selectedFile);
-
-    } catch (error) {
-      console.log('❌ Upload failed:', error);
-    }
-  }
-};
-
-  
-
+  };
 
   const copySummary = async () => {
     const results = searchResults || uploadResults;
@@ -255,7 +250,6 @@ ${(results.recommendations || []).map(book => `• ${book.title} ${dict.by} ${bo
     const circumference = 2 * Math.PI * radius;
     const strokeDashoffset = circumference - (progress / 100) * circumference;
 
-    // Get dictionary for spinner
     const spinnerDict = contentDict[currentLang] || contentDict.en;
 
     return (
@@ -332,8 +326,6 @@ ${(results.recommendations || []).map(book => `• ${book.title} ${dict.by} ${bo
   );
 
   const renderResults = (results, loading, error, type, progress = 0, currentStep = "") => {
-    const currentLang = lang || 'en';
-    
     if (loading) {
       return (
         <motion.div
@@ -343,7 +335,7 @@ ${(results.recommendations || []).map(book => `• ${book.title} ${dict.by} ${bo
         >
           <div className="text-center space-y-6">
             {/* Spinner with percentage */}
-            <SpinnerWithPercentage progress={progress} size="large" currentLang={currentLang} />
+            <SpinnerWithPercentage progress={progress} size="large" currentLang={lang} />
             
             {/* Current step - only show if available */}
             {currentStep && (
@@ -448,8 +440,6 @@ ${(results.recommendations || []).map(book => `• ${book.title} ${dict.by} ${bo
           <h3 className="text-2xl font-bold text-white">
             {type === "search" ? dict.searchResults : dict.uploadResults}
           </h3>
-          
-
         </div>
 
         {results.book?.thumbnail && (
@@ -512,24 +502,28 @@ ${(results.recommendations || []).map(book => `• ${book.title} ${dict.by} ${bo
           </Button>
         </div>
 
-{uniqueRecommendations.length > 0 && (
-  <div>
-    <h4 className="font-semibold text-purple-300 mb-4 text-lg">
-      {dict.recommendations}:
-    </h4>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-      {uniqueRecommendations.map((book, index) =>
-        renderBookCard(book, index)
-      )}
-    </div>
-  </div>
-)}
+        {uniqueRecommendations.length > 0 && (
+          <div>
+            <h4 className="font-semibold text-purple-300 mb-4 text-lg">
+              {dict.recommendations}:
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {uniqueRecommendations.map((book, index) =>
+                renderBookCard(book, index)
+              )}
+            </div>
+          </div>
+        )}
       </motion.div>
     );
   };
 
   return (
+        <div 
+      className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white pb-4"
+      dir={lang === 'ar' ? 'rtl' : 'ltr'}
+    >
+      <Header lang={lang}/>
     <main className="flex-grow flex items-center justify-center relative z-10 py-8 px-4 mt-12">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-24 -right-24 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
@@ -953,75 +947,77 @@ ${(results.recommendations || []).map(book => `• ${book.title} ${dict.by} ${bo
           </AnimatePresence>
         </div>
         {/* قسم تعليمي لتحسين SEO ونسبة النص */}
-<section className="mt-24 max-w-5xl mx-auto px-4 border-t border-gray-800 pt-16">
-  <div className="grid md:grid-cols-2 gap-12 items-start">
-    <div className="space-y-6">
-      <h2 className="text-3xl font-bold text-white">
-        {lang === "en" ? "Elevate Your Learning with AI Summaries" : "ارتقِ بتعليمك مع ملخصات الذكاء الاصطناعي"}
-      </h2>
-      <p className="text-gray-400 leading-relaxed">
-        {lang === "en" 
-          ? "Our platform leverages advanced Natural Language Processing to distill complex manuscripts into actionable insights. This methodology isn't just about shortening text; it's about identifying semantic patterns and core arguments that define a book's unique value proposition."
-          : "تعتمد منصتنا على معالجة اللغات الطبيعية المتقدمة لتقطير المخطوطات المعقدة وتحويلها إلى رؤى قابلة للتنفيذ. هذه المنهجية لا تقتصر فقط على تقصير النص، بل تتعلق بتحديد الأنماط الدلالية والحجج الأساسية التي تحدد قيمة الكتاب الفريدة."}
-      </p>
-    </div>
-    
-    <div className="bg-gray-800/30 p-8 rounded-3xl border border-gray-700/50 backdrop-blur-sm">
-      <h3 className="text-xl font-semibold text-purple-400 mb-4">
-        {lang === "en" ? "How to use these summaries?" : "كيف تستخدم هذه الملخصات؟"}
-      </h3>
-      <ul className="space-y-4 text-gray-300">
-        <li className="flex gap-3">
-          <span className="text-blue-500 font-bold">01.</span>
-          <p>{lang === "en" ? "Pre-reading: Get an overview before committing to the full book." : "القراءة التمهيدية: احصل على نظرة عامة قبل الالتزام بقراءة الكتاب كاملاً."}</p>
-        </li>
-        <li className="flex gap-3">
-          <span className="text-blue-500 font-bold">02.</span>
-          <p>{lang === "en" ? "Review: Refresh your memory on key concepts of books you've already read." : "المراجعة: جدد ذاكرتك حول المفاهيم الأساسية للكتب التي قرأتها بالفعل."}</p>
-        </li>
-        <li className="flex gap-3">
-          <span className="text-blue-500 font-bold">03.</span>
-          <p>{lang === "en" ? "Decision Making: Quickly compare different perspectives on a single topic." : "اتخاذ القرار: قارن بسرعة بين وجهات نظر مختلفة حول موضوع واحد."}</p>
-        </li>
-      </ul>
-    </div>
-  </div>
-</section>
-<section className="mt-20 mb-10 max-w-5xl mx-auto px-4">
-  <div className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 p-8 rounded-3xl border border-white/5">
-    <h3 className="text-2xl font-bold text-white mb-6 text-center">
-      {lang === "en" ? "Deep Dive into our Technology" : "تعمق في تقنيتنا"}
-    </h3>
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-      <div>
-        <h4 className="text-blue-400 font-medium mb-2">{lang === "en" ? "Contextual Awareness" : "الوعي بالسياق"}</h4>
-        <p className="text-sm text-gray-500">
-          {lang === "en" ? "Our AI preserves the author's tone while extracting core meanings from your uploaded documents." : "يحافظ ذكاؤنا الاصطناعي على نبرة المؤلف أثناء استخراج المعاني الجوهرية من مستنداتك المرفوعة."}
-        </p>
-      </div>
-      <div>
-        <h4 className="text-purple-400 font-medium mb-2">{lang === "en" ? "Vectorized Search" : "البحث المتجهي"}</h4>
-        <p className="text-sm text-gray-500">
-          {lang === "en" ? "Searching for books uses semantic similarity, ensuring you find what you need even with vague titles." : "البحث عن الكتب يستخدم التشابه الدلالي، مما يضمن العثور على ما تحتاجه حتى مع العناوين الغامضة."}
-        </p>
-      </div>
-      <div>
-        <h4 className="text-green-400 font-medium mb-2">{lang === "en" ? "Multi-format Extraction" : "استخراج متعدد الصيغ"}</h4>
-        <p className="text-sm text-gray-500">
-          {lang === "en" ? "Optimized parsing for PDF structures, including headers, footnotes, and main body text." : "تحليل محسن لهياكل PDF، بما في ذلك العناوين والحواشي السفلية ومتن النص الرئيسي."}
-        </p>
-      </div>
-    </div>
-  </div>
-</section>
-<footer className="mt-16 text-center text-gray-600 text-xs pb-12">
-  <p className="max-w-2xl mx-auto leading-relaxed">
-    {lang === "en" 
-      ? "Book Summarizer is a comprehensive digital library management tool. It combines the power of large language models with a user-friendly interface to provide high-quality document analysis, book discovery, and knowledge retention services for researchers and avid readers worldwide."
-      : "ملخص الكتب هو أداة شاملة لإدارة المكتبة الرقمية. فهو يجمع بين قوة النماذج اللغوية الكبيرة وواجهة سهلة الاستخدام لتوفير تحليل مستندات عالي الجودة، واكتشاف الكتب، وخدمات الاحتفاظ بالمعرفة للباحثين والقراء الشغوفين حول العالم."}
-  </p>
-</footer>
+        <section className="mt-24 max-w-5xl mx-auto px-4 border-t border-gray-800 pt-16">
+          <div className="grid md:grid-cols-2 gap-12 items-start">
+            <div className="space-y-6">
+              <h2 className="text-3xl font-bold text-white">
+                {lang === "en" ? "Elevate Your Learning with AI Summaries" : "ارتقِ بتعليمك مع ملخصات الذكاء الاصطناعي"}
+              </h2>
+              <p className="text-gray-400 leading-relaxed">
+                {lang === "en" 
+                  ? "Our platform leverages advanced Natural Language Processing to distill complex manuscripts into actionable insights. This methodology isn't just about shortening text; it's about identifying semantic patterns and core arguments that define a book's unique value proposition."
+                  : "تعتمد منصتنا على معالجة اللغات الطبيعية المتقدمة لتقطير المخطوطات المعقدة وتحويلها إلى رؤى قابلة للتنفيذ. هذه المنهجية لا تقتصر فقط على تقصير النص، بل تتعلق بتحديد الأنماط الدلالية والحجج الأساسية التي تحدد قيمة الكتاب الفريدة."}
+              </p>
+            </div>
+            
+            <div className="bg-gray-800/30 p-8 rounded-3xl border border-gray-700/50 backdrop-blur-sm">
+              <h3 className="text-xl font-semibold text-purple-400 mb-4">
+                {lang === "en" ? "How to use these summaries?" : "كيف تستخدم هذه الملخصات؟"}
+              </h3>
+              <ul className="space-y-4 text-gray-300">
+                <li className="flex gap-3">
+                  <span className="text-blue-500 font-bold">01.</span>
+                  <p>{lang === "en" ? "Pre-reading: Get an overview before committing to the full book." : "القراءة التمهيدية: احصل على نظرة عامة قبل الالتزام بقراءة الكتاب كاملاً."}</p>
+                </li>
+                <li className="flex gap-3">
+                  <span className="text-blue-500 font-bold">02.</span>
+                  <p>{lang === "en" ? "Review: Refresh your memory on key concepts of books you've already read." : "المراجعة: جدد ذاكرتك حول المفاهيم الأساسية للكتب التي قرأتها بالفعل."}</p>
+                </li>
+                <li className="flex gap-3">
+                  <span className="text-blue-500 font-bold">03.</span>
+                  <p>{lang === "en" ? "Decision Making: Quickly compare different perspectives on a single topic." : "اتخاذ القرار: قارن بسرعة بين وجهات نظر مختلفة حول موضوع واحد."}</p>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+        <section className="mt-20 mb-10 max-w-5xl mx-auto px-4">
+          <div className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 p-8 rounded-3xl border border-white/5">
+            <h3 className="text-2xl font-bold text-white mb-6 text-center">
+              {lang === "en" ? "Deep Dive into our Technology" : "تعمق في تقنيتنا"}
+            </h3>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div>
+                <h4 className="text-blue-400 font-medium mb-2">{lang === "en" ? "Contextual Awareness" : "الوعي بالسياق"}</h4>
+                <p className="text-sm text-gray-500">
+                  {lang === "en" ? "Our AI preserves the author's tone while extracting core meanings from your uploaded documents." : "يحافظ ذكاؤنا الاصطناعي على نبرة المؤلف أثناء استخراج المعاني الجوهرية من مستنداتك المرفوعة."}
+                </p>
+              </div>
+              <div>
+                <h4 className="text-purple-400 font-medium mb-2">{lang === "en" ? "Vectorized Search" : "البحث المتجهي"}</h4>
+                <p className="text-sm text-gray-500">
+                  {lang === "en" ? "Searching for books uses semantic similarity, ensuring you find what you need even with vague titles." : "البحث عن الكتب يستخدم التشابه الدلالي، مما يضمن العثور على ما تحتاجه حتى مع العناوين الغامضة."}
+                </p>
+              </div>
+              <div>
+                <h4 className="text-green-400 font-medium mb-2">{lang === "en" ? "Multi-format Extraction" : "استخراج متعدد الصيغ"}</h4>
+                <p className="text-sm text-gray-500">
+                  {lang === "en" ? "Optimized parsing for PDF structures, including headers, footnotes, and main body text." : "تحليل محسن لهياكل PDF، بما في ذلك العناوين والحواشي السفلية ومتن النص الرئيسي."}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+        <footer className="mt-16 text-center text-gray-600 text-xs pb-12">
+          <p className="max-w-2xl mx-auto leading-relaxed">
+            {lang === "en" 
+              ? "Book Summarizer is a comprehensive digital library management tool. It combines the power of large language models with a user-friendly interface to provide high-quality document analysis, book discovery, and knowledge retention services for researchers and avid readers worldwide."
+              : "ملخص الكتب هو أداة شاملة لإدارة المكتبة الرقمية. فهو يجمع بين قوة النماذج اللغوية الكبيرة وواجهة سهلة الاستخدام لتوفير تحليل مستندات عالي الجودة، واكتشاف الكتب، وخدمات الاحتفاظ بالمعرفة للباحثين والقراء الشغوفين حول العالم."}
+          </p>
+        </footer>
       </div>
     </main>
+    </div>
+
   );
 };

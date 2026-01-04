@@ -1,7 +1,4 @@
-"use client";
-import { useLanguage } from "@/lib/context/LanguageContext";
-import { motion } from "framer-motion";
-import Header from "@/components/Header"; // تأكد من وجود هذا الملف
+import Header from "@/components/Header";
 
 // Static dictionary
 const aboutDict = {
@@ -49,42 +46,41 @@ const aboutDict = {
   },
 };
 
-export const AboutContent = () => {
-  const { lang } = useLanguage();
-  const dict = aboutDict;
+// Update component to accept lang and dictionary as props
+export const AboutContent = ({ lang = "en", dictionary }) => {
+  // Use the passed lang prop or fallback to en
+  const dict = aboutDict[lang] || aboutDict.en;
+  
+  // You can also merge with server dictionary if provided
+  const serverDict = dictionary?.about || {};
+  const mergedDict = { ...dict, ...serverDict };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white">
-      <Header />
+    <div 
+      className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white"
+      dir={lang === 'ar' ? 'rtl' : 'ltr'}
+    >
+      <Header lang={lang} />
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4 text-center">
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+        <h1
           className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent leading-[1.5]"
         >
-          {dict[lang].title}
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
+          {mergedDict.title}
+        </h1>
+        <p
           className="text-xl text-gray-300 max-w-3xl mx-auto"
         >
-          {dict[lang].content}
-        </motion.p>
+          {mergedDict.content}
+        </p>
       </section>
 
       {/* Mission, Vision & Values */}
       <section className="py-14 px-4">
         <div className="container mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Mission */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+          <div
             className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700"
           >
             <div className="text-blue-400 mb-4">
@@ -92,15 +88,12 @@ export const AboutContent = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
               </svg>
             </div>
-            <h3 className="text-xl font-bold mb-2">{dict[lang].mission}</h3>
-            <p className="text-gray-300">{dict[lang].missionDesc}</p>
-          </motion.div>
+            <h3 className="text-xl font-bold mb-2">{mergedDict.mission}</h3>
+            <p className="text-gray-300">{mergedDict.missionDesc}</p>
+          </div>
 
           {/* Vision */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+          <div
             className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700"
           >
             <div className="text-purple-400 mb-4">
@@ -109,15 +102,12 @@ export const AboutContent = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
               </svg>
             </div>
-            <h3 className="text-xl font-bold mb-2">{dict[lang].vision}</h3>
-            <p className="text-gray-300">{dict[lang].visionDesc}</p>
-          </motion.div>
+            <h3 className="text-xl font-bold mb-2">{mergedDict.vision}</h3>
+            <p className="text-gray-300">{mergedDict.visionDesc}</p>
+          </div>
 
           {/* Values */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
+          <div
             className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700"
           >
             <div className="text-green-400 mb-4">
@@ -125,15 +115,15 @@ export const AboutContent = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
               </svg>
             </div>
-            <h3 className="text-xl font-bold mb-2">{dict[lang].values}</h3>
+            <h3 className="text-xl font-bold mb-2">{mergedDict.values}</h3>
             <ul className="text-gray-300 space-y-2">
-              {dict[lang].valuesList.map((value, index) => (
+              {mergedDict.valuesList.map((value, index) => (
                 <li key={index} className="flex items-start">
                   <span className="text-green-400 mr-2">•</span> {value}
                 </li>
               ))}
             </ul>
-          </motion.div>
+          </div>
         </div>
       </section>
     </div>

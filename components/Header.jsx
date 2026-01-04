@@ -1,9 +1,10 @@
+// components/Header.jsx
 "use client";
+
 import { useState, useEffect, useCallback } from "react";
-import { useLanguage } from "@/lib/context/LanguageContext";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {  FiX, FiBook, FiGlobe, FiHome, FiInfo, FiMail, FiShield, FiChevronDown } from "react-icons/fi";
+import { FiX, FiBook, FiGlobe, FiHome, FiInfo, FiMail, FiShield, FiChevronDown } from "react-icons/fi";
 import { ImBlog } from "react-icons/im";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -13,31 +14,32 @@ const navigationDict = {
     about: "About Us",
     contact: "Contact",
     privacyPolicy: "Privacy",
-    features: "Features",
     blog: "Blog",
-    search: "Search Books",
-    summaries: "My Summaries"
   },
   ar: {
     home: "الرئيسية",
     about: "من نحن",
     contact: "اتصل بنا",
     privacyPolicy: "الخصوصية",
-    features: "المميزات",
     blog: "المدونة",
-    search: "ابحث عن كتب",
-    summaries: "ملخصاتي"
   },
 };
 
-const Header = () => {
-  const { lang, toggleLanguage } = useLanguage();
+const Header = ({ lang = "en" }) => { // Add default value
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [hoveredLink, setHoveredLink] = useState(null);
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+  const [currentPath, setCurrentPath] = useState("/");
+  
   const pathname = usePathname();
+
+  useEffect(() => {
+    if (pathname) {
+      setCurrentPath(pathname.replace(/^\/(en|ar)/, '') || '/');
+    }
+  }, [pathname]);
 
   const handleScroll = useCallback(() => {
     const isScrolled = window.scrollY > 20;
@@ -53,26 +55,41 @@ const Header = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
 
-  const isActive = (path) => pathname === path || pathname.startsWith(`${path}/`);
+  // Safely get navigation text
+  const getNavText = (label) => {
+    const currentLang = lang || 'en';
+    return navigationDict[currentLang]?.[label] || label;
+  };
 
   const navLinks = [
-    { href: "/main", label: "home", icon: <FiHome className="w-4 h-4" /> },
-    { href: "/blogs", label: "blog", icon:  <ImBlog className="w-4 h-4"/> },
-    { href: "/about", label: "about", icon: <FiInfo className="w-4 h-4" /> },
-    { href: "/contact", label: "contact", icon: <FiMail className="w-4 h-4" /> },
-    { href: "/privacy-policy", label: "privacyPolicy", icon: <FiShield className="w-4 h-4" /> },
+    { href: `/${lang}`, label: "home", icon: <FiHome className="w-4 h-4" /> },
+    { href: `/${lang}/blogs`, label: "blog", icon: <ImBlog className="w-4 h-4"/> },
+    { href: `/${lang}/about`, label: "about", icon: <FiInfo className="w-4 h-4" /> },
+    { href: `/${lang}/contact`, label: "contact", icon: <FiMail className="w-4 h-4" /> },
+    { href: `/${lang}/privacy-policy`, label: "privacyPolicy", icon: <FiShield className="w-4 h-4" /> },
   ];
 
+  // Don't render during SSR to avoid hydration issues
+  if (!isMounted) {
+    return (
+      <header className="fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-xl border-b border-gray-800/30 py-4">
+        <div className="container mx-auto px-4 lg:px-6">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo skeleton */}
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gray-800 rounded-xl animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
+
   const headerClasses = `fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-    isMounted && scrolled
+    scrolled
       ? "bg-gray-900/95 backdrop-blur-xl border-b border-gray-800/30 py-2 shadow-2xl shadow-black/30"
       : "bg-gradient-to-b from-gray-900/95 to-transparent backdrop-blur-md border-b border-transparent py-4"
   }`;
-
-  const languageVariants = {
-    en: { x: 0, opacity: 1 },
-    ar: { x: 0, opacity: 1 }
-  };
 
   return (
     <motion.header 
@@ -89,7 +106,7 @@ const Header = () => {
             whileTap={{ scale: 0.95 }}
             className="flex items-center"
           >
-            <Link href="/" className="flex items-center group gap-3">
+            <Link href={`/${lang}`} className="flex items-center group gap-3">
               <motion.div 
                 className="relative bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 text-white p-3 rounded-xl transition-all duration-500 group-hover:from-blue-500 group-hover:via-purple-500 group-hover:to-pink-500 shadow-lg group-hover:shadow-blue-500/25"
                 whileHover={{ rotate: 5 }}
@@ -105,10 +122,10 @@ const Header = () => {
               
               <div className="flex flex-col">
                 <span className="text-xl font-bold bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent">
-                  Book Summarizer
+                  {lang === 'ar' ? 'ملخص الكتب' : 'Book Summarizer'}
                 </span>
                 <span className="text-xs text-gray-400 font-medium tracking-wider">
-                  AI-Powered Book Insights
+                  {lang === 'ar' ? 'رؤى الكتب بالذكاء الاصطناعي' : 'AI-Powered Book Insights'}
                 </span>
               </div>
             </Link>
@@ -126,24 +143,24 @@ const Header = () => {
                 <Link
                   href={link.href}
                   className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 ${
-                    isActive(link.href)
+                    pathname === link.href
                       ? "text-white bg-gradient-to-r from-blue-900/40 to-purple-900/40 border border-blue-700/30"
                       : "text-gray-300 hover:text-white hover:bg-gray-800/30"
                   }`}
                 >
                   {link.icon && (
                     <motion.span
-                      animate={isActive(link.href) ? { rotate: 360 } : {}}
+                      animate={pathname === link.href ? { rotate: 360 } : {}}
                       transition={{ duration: 0.5 }}
                     >
                       {link.icon}
                     </motion.span>
                   )}
                   <span className="font-medium">
-                    {navigationDict[lang][link.label]}
+                    {getNavText(link.label)}
                   </span>
                   
-                  {isActive(link.href) && (
+                  {pathname === link.href && (
                     <motion.div
                       className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
                       layoutId="activeIndicator"
@@ -151,8 +168,7 @@ const Header = () => {
                   )}
                 </Link>
                 
-                {/* Hover effect */}
-                {hoveredLink === link.href && !isActive(link.href) && (
+                {hoveredLink === link.href && pathname !== link.href && (
                   <motion.div
                     className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl -z-10"
                     layoutId="hoverBackground"
@@ -195,11 +211,9 @@ const Header = () => {
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
                     className="absolute right-0 top-full mt-2 w-40 bg-gray-900/95 backdrop-blur-xl border border-gray-800 rounded-xl shadow-2xl shadow-black/50 overflow-hidden"
                   >
-                    <button
-                      onClick={() => {
-                        if (lang !== "en") toggleLanguage();
-                        setShowLanguageMenu(false);
-                      }}
+                    <Link
+                      href={`/en${currentPath === '/' ? '' : currentPath}`}
+                      onClick={() => setShowLanguageMenu(false)}
                       className={`flex items-center justify-between w-full px-4 py-3 text-left transition-colors duration-200 ${
                         lang === "en"
                           ? "bg-gradient-to-r from-blue-900/40 to-purple-900/40 text-white"
@@ -210,12 +224,10 @@ const Header = () => {
                       {lang === "en" && (
                         <div className="w-2 h-2 bg-blue-500 rounded-full" />
                       )}
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (lang !== "ar") toggleLanguage();
-                        setShowLanguageMenu(false);
-                      }}
+                    </Link>
+                    <Link
+                      href={`/ar${currentPath === '/' ? '' : currentPath}`}
+                      onClick={() => setShowLanguageMenu(false)}
                       className={`flex items-center justify-between w-full px-4 py-3 text-left transition-colors duration-200 ${
                         lang === "ar"
                           ? "bg-gradient-to-r from-blue-900/40 to-purple-900/40 text-white"
@@ -226,7 +238,7 @@ const Header = () => {
                       {lang === "ar" && (
                         <div className="w-2 h-2 bg-blue-500 rounded-full" />
                       )}
-                    </button>
+                    </Link>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -294,18 +306,18 @@ const Header = () => {
                       href={link.href}
                       onClick={() => setIsMenuOpen(false)}
                       className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${
-                        isActive(link.href)
+                        pathname === link.href
                           ? "text-white bg-gradient-to-r from-blue-900/40 to-purple-900/40"
                           : "text-gray-300 hover:text-white hover:bg-gray-800/50"
                       }`}
                     >
                       {link.icon && (
-                        <span className={`${isActive(link.href) ? "text-blue-300" : "text-gray-400"}`}>
+                        <span className={`${pathname === link.href ? "text-blue-300" : "text-gray-400"}`}>
                           {link.icon}
                         </span>
                       )}
                       <span className="font-medium">
-                        {navigationDict[lang][link.label]}
+                        {getNavText(link.label)}
                       </span>
                     </Link>
                   </motion.div>
@@ -319,11 +331,9 @@ const Header = () => {
                   className="flex items-center gap-3 px-4 py-3"
                 >
                   <FiGlobe className="w-5 h-5 text-gray-400" />
-                  <button
-                    onClick={() => {
-                      toggleLanguage();
-                      setIsMenuOpen(false);
-                    }}
+                  <Link
+                    href={`/${lang === 'en' ? 'ar' : 'en'}${currentPath === '/' ? '' : currentPath}`}
+                    onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
                   >
                     <span className="font-medium">
@@ -332,7 +342,7 @@ const Header = () => {
                     <span className="px-2 py-1 text-xs bg-gray-800 rounded-lg">
                       {lang === "en" ? "العربية" : "EN"}
                     </span>
-                  </button>
+                  </Link>
                 </motion.div>
               </motion.div>
             </motion.div>

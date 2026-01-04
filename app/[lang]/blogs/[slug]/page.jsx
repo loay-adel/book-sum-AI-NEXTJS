@@ -1,12 +1,11 @@
 "use client"
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import { useSingleBlog } from '@/lib/hooks/useBlogs';
 import Image from 'next/image';
 import Link from 'next/link';
-import Head from 'next/head';
 import ReactMarkdown from 'react-markdown';
 import { 
   Copy, 
@@ -26,7 +25,9 @@ import {
   Linkedin,
   Send,
   Link2,
-  ArrowLeft
+  ArrowLeft,
+  ChevronRight,
+
 } from 'lucide-react';
 
 // SVG data URL for fallback image
@@ -68,9 +69,98 @@ const calculateReadingTime = (text) => {
   return time;
 };
 
-const BlogDetailClientComponent = ({ slug }) => {
+// Arabic translations
+const translations = {
+  en: {
+    readingTime: "min read",
+    bookInfo: "Book Information",
+    title: "Title",
+    author: "Author",
+    published: "Published",
+    pages: "Pages",
+    genre: "Genre",
+    aiSummary: "AI Summary",
+    fullAnalysis: "Full Analysis",
+    addComment: "Add Your Comment",
+    namePlaceholder: "Your name (optional)",
+    commentPlaceholder: "Share your thoughts about this book summary... (Markdown supported)",
+    markdownHelp: "Need help?",
+    hideHelp: "Hide Help",
+    formattingHelp: "Formatting help:",
+    postComment: "Post Comment",
+    posting: "Posting...",
+    characters: "characters",
+    comments: "Comments",
+    noComments: "No comments yet",
+    beFirst: "Be the first to share your thoughts!",
+    relatedSummaries: "Related Summaries",
+    readSummary: "Read Summary",
+    backToBlogs: "Back to All Blogs",
+    notFound: "Blog Not Found",
+    notFoundMessage: "The blog post you're looking for doesn't exist or has been removed.",
+    browseBlogs: "Browse All Blogs",
+    share: "Share",
+    copyLink: "Copy Link",
+    copied: "Copied!",
+    export: "Export",
+    print: "Print",
+    readingProgress: "Reading Progress",
+    contents: "Contents",
+    by: "By",
+    category: "Category",
+    views: "views",
+    likes: "likes",
+    commentsCount: "comments"
+  },
+  ar: {
+    readingTime: "دقيقة قراءة",
+    bookInfo: "معلومات الكتاب",
+    title: "العنوان",
+    author: "المؤلف",
+    published: "تاريخ النشر",
+    pages: "الصفحات",
+    genre: "النوع",
+    aiSummary: "ملخص الذكاء الاصطناعي",
+    fullAnalysis: "التحليل الكامل",
+    addComment: "أضف تعليقك",
+    namePlaceholder: "اسمك (اختياري)",
+    commentPlaceholder: "شارك أفكارك حول ملخص الكتاب هذا... (يدعم Markdown)",
+    markdownHelp: "تحتاج مساعدة؟",
+    hideHelp: "إخفاء المساعدة",
+    formattingHelp: "مساعدة في التنسيق:",
+    postComment: "نشر التعليق",
+    posting: "جاري النشر...",
+    characters: "حرف",
+    comments: "التعليقات",
+    noComments: "لا توجد تعليقات بعد",
+    beFirst: "كن أول من يشارك أفكاره!",
+    relatedSummaries: "ملخصات ذات صلة",
+    readSummary: "قراءة الملخص",
+    backToBlogs: "العودة إلى جميع المدونات",
+    notFound: "المدونة غير موجودة",
+    notFoundMessage: "المدونة التي تبحث عنها غير موجودة أو تمت إزالتها.",
+    browseBlogs: "تصفح جميع المدونات",
+    share: "مشاركة",
+    copyLink: "نسخ الرابط",
+    copied: "تم النسخ!",
+    export: "تصدير",
+    print: "طباعة",
+    readingProgress: "تقدم القراءة",
+    contents: "المحتويات",
+    by: "بواسطة",
+    category: "التصنيف",
+    views: "مشاهدات",
+    likes: "إعجابات",
+    commentsCount: "تعليقات"
+  }
+};
+
+const BlogDetailClientComponent = ({ lang = "en", slug }) => {
   const params = useParams();
+  const router = useRouter();
   const blogSlug = slug || params?.slug;
+
+  
   
   const { blog, loading, error, likeBlog, addComment } = useSingleBlog(blogSlug);
   
@@ -86,7 +176,9 @@ const BlogDetailClientComponent = ({ slug }) => {
   const [activeHeading, setActiveHeading] = useState('');
   const [showMarkdownHelp, setShowMarkdownHelp] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
-  const [copyLinkText, setCopyLinkText] = useState('Copy Link');
+  const [copyLinkText, setCopyLinkText] = useState(translations[lang]?.copyLink || 'Copy Link');
+  
+  const t = translations[lang] || translations.en;
 
   // Memoize handlers for performance
   const handleLike = useCallback(async () => {
@@ -117,13 +209,13 @@ const BlogDetailClientComponent = ({ slug }) => {
     navigator.clipboard.writeText(text);
     
     if (type === 'link') {
-      setCopyLinkText('Copied!');
-      setTimeout(() => setCopyLinkText('Copy Link'), 2000);
+      setCopyLinkText(t.copied || 'Copied!');
+      setTimeout(() => setCopyLinkText(t.copyLink || 'Copy Link'), 2000);
     } else {
       setCopiedCode(text);
       setTimeout(() => setCopiedCode(''), 2000);
     }
-  }, []);
+  }, [t]);
 
   const shareBlog = useCallback(async (platform) => {
     const url = typeof window !== 'undefined' ? window.location.href : '';
@@ -160,18 +252,21 @@ const BlogDetailClientComponent = ({ slug }) => {
     
     const content = `
       <!DOCTYPE html>
-      <html>
+      <html dir="${lang === 'ar' ? 'rtl' : 'ltr'}" lang="${lang}">
         <head>
           <meta charset="UTF-8">
-          <title>${blog.title} - Book Summary</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${blog.title} - ${lang === 'ar' ? 'ملخص الكتاب' : 'Book Summary'}</title>
           <style>
             body { 
-              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, ${lang === 'ar' ? "'Noto Sans Arabic', sans-serif" : "sans-serif"}; 
               line-height: 1.6; 
               max-width: 800px; 
               margin: 0 auto; 
               padding: 20px; 
               color: #333;
+              direction: ${lang === 'ar' ? 'rtl' : 'ltr'};
+              text-align: ${lang === 'ar' ? 'right' : 'left'};
             }
             h1 { color: #2563eb; }
             .meta { color: #666; font-size: 0.9em; margin-bottom: 20px; }
@@ -189,9 +284,9 @@ const BlogDetailClientComponent = ({ slug }) => {
         <body>
           <h1>${blog.title}</h1>
           <div class="meta">
-            <p><strong>By:</strong> ${blog.user?.username || 'Anonymous'} | 
-               <strong>Date:</strong> ${new Date(blog.createdAt).toLocaleDateString()} | 
-               <strong>Category:</strong> ${blog.category || 'Uncategorized'}</p>
+            <p><strong>${t.by}:</strong> ${blog.user?.username || 'Anonymous'} | 
+               <strong>${t.published}:</strong> ${new Date(blog.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')} | 
+               <strong>${t.category}:</strong> ${blog.category || 'Uncategorized'}</p>
           </div>
           <hr>
           <div class="content">
@@ -199,7 +294,7 @@ const BlogDetailClientComponent = ({ slug }) => {
           </div>
           <div class="no-print">
             <p style="margin-top: 40px; color: #666; font-size: 0.8em;">
-              Exported from Book Summaries & Reviews
+              ${lang === 'ar' ? 'تم التصدير من ملخصات الكتب والمراجعات' : 'Exported from Book Summaries & Reviews'}
             </p>
           </div>
         </body>
@@ -226,23 +321,23 @@ const BlogDetailClientComponent = ({ slug }) => {
     }
     
     setShowExportMenu(false);
-  }, [blog]);
+  }, [blog, lang, t]);
 
   // Get safe image URL
   const safeThumbnailUrl = useMemo(() => {
-    if (!blog?.bookDetails?.Thumbnail) return PLACEHOLDER_SVG;
-    return getSafeImageUrl(blog.bookDetails.Thumbnail);
+    if (!blog?.bookDetails?.thumbnail) return PLACEHOLDER_SVG;
+    return getSafeImageUrl(blog.bookDetails.thumbnail);
   }, [blog]);
 
   // Memoize formatted date
   const formattedDate = useMemo(() => {
     if (!blog?.createdAt) return '';
-    return new Date(blog.createdAt).toLocaleDateString('en-US', {
+    return new Date(blog.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
-  }, [blog]);
+  }, [blog, lang]);
 
   // Calculate reading time
   const readingTime = useMemo(() => {
@@ -252,7 +347,7 @@ const BlogDetailClientComponent = ({ slug }) => {
     return calculateReadingTime(content + ' ' + summary);
   }, [blog]);
 
-  // Enhanced ReactMarkdown component with code highlighting (simplified)
+  // Enhanced ReactMarkdown component
   const EnhancedReactMarkdown = useCallback(({ children }) => {
     const copyCode = (codeString) => {
       navigator.clipboard.writeText(codeString);
@@ -269,11 +364,11 @@ const BlogDetailClientComponent = ({ slug }) => {
             
             return !inline && match ? (
               <div className="relative group my-4">
-                <div className="absolute right-3 top-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className={`absolute ${lang === 'ar' ? 'left-3' : 'right-3'} top-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity`}>
                   <button
                     onClick={() => copyCode(codeString)}
                     className="p-2 bg-gray-800/80 backdrop-blur-sm rounded-lg hover:bg-gray-700 transition-colors"
-                    aria-label="Copy code"
+                    aria-label={lang === 'ar' ? "نسخ الكود" : "Copy code"}
                   >
                     {copiedCode === codeString ? (
                       <Check className="w-4 h-4 text-green-400" />
@@ -282,7 +377,7 @@ const BlogDetailClientComponent = ({ slug }) => {
                     )}
                   </button>
                 </div>
-                <div className="absolute left-3 top-3 text-xs text-gray-400 font-mono">
+                <div className={`absolute ${lang === 'ar' ? 'right-3' : 'left-3'} top-3 text-xs text-gray-400 font-mono`}>
                   {match[1]}
                 </div>
                 <pre className="bg-gray-900/50 rounded-lg p-4 pt-10 overflow-x-auto text-sm">
@@ -310,7 +405,7 @@ const BlogDetailClientComponent = ({ slug }) => {
         {children}
       </ReactMarkdown>
     );
-  }, [copiedCode]);
+  }, [copiedCode, lang]);
 
   // Extract headings from content
   useEffect(() => {
@@ -401,22 +496,23 @@ const BlogDetailClientComponent = ({ slug }) => {
     if (headings.length === 0) return null;
     
     return (
-      <div className="sticky top-24 ml-8 hidden xl:block w-64">
+      <div className={`sticky top-24 ${lang === 'ar' ? 'mr-8' : 'ml-8'} hidden xl:block w-64`}>
         <div className="p-4 bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700">
           <h4 className="font-bold mb-3 text-sm text-gray-300 uppercase tracking-wider flex items-center gap-2">
             <BookOpen className="w-4 h-4" />
-            Contents
+            {t.contents}
           </h4>
-          <nav className="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto pr-2">
+          <nav className="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
             {headings.map((heading) => (
               <a
                 key={heading.id}
                 href={`#${heading.id}`}
-                className={`block text-sm transition duration-200 hover:translate-x-1 ${
+                className={`block text-sm transition duration-200 ${lang === 'ar' ? 'hover:-translate-x-1' : 'hover:translate-x-1'} ${
                   activeHeading === heading.id
-                    ? 'text-blue-400 font-medium border-l-2 border-blue-400 pl-3 -ml-0.5'
-                    : 'text-gray-400 hover:text-white pl-4'
-                } ${heading.level === 'H3' ? 'ml-4 text-xs' : ''}`}
+                    ? 'text-blue-400 font-medium border-r-2 border-blue-400 pr-3 -mr-0.5'
+                    : 'text-gray-400 hover:text-white pr-4'
+                } ${heading.level === 'H3' ? (lang === 'ar' ? 'mr-4' : 'ml-4') + ' text-xs' : ''}`}
+                style={{ borderRight: lang === 'ar' ? undefined : 'none', borderLeft: lang === 'ar' ? 'none' : undefined }}
                 onClick={(e) => {
                   e.preventDefault();
                   document.getElementById(heading.id)?.scrollIntoView({
@@ -431,7 +527,7 @@ const BlogDetailClientComponent = ({ slug }) => {
           <div className="mt-4 pt-4 border-t border-gray-700">
             <div className="text-xs text-gray-500">
               <div className="flex items-center justify-between">
-                <span>Reading Progress</span>
+                <span>{t.readingProgress}</span>
                 <span>{Math.round(readingProgress)}%</span>
               </div>
               <div className="mt-1 h-1 bg-gray-700 rounded-full overflow-hidden">
@@ -445,14 +541,14 @@ const BlogDetailClientComponent = ({ slug }) => {
         </div>
       </div>
     );
-  }, [headings, activeHeading, readingProgress]);
+  }, [headings, activeHeading, readingProgress, lang, t]);
 
   // Early return for loading state
   if (loading) {
     return (
       <>
-        <Header />
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+        <Header lang={lang} />
+        <div className={`min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white ${lang === 'ar' ? 'font-arabic' : 'font-sans'}`}>
           <div className="max-w-6xl mx-auto px-4 py-16">
             <div className="animate-pulse">
               <div className="h-8 bg-gray-700 rounded w-1/4 mb-8"></div>
@@ -477,20 +573,18 @@ const BlogDetailClientComponent = ({ slug }) => {
   if (error || !blog) {
     return (
       <>
-        <Header />
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+        <Header lang={lang} />
+        <div className={`min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white ${lang === 'ar' ? 'font-arabic' : 'font-sans'}`}>
           <div className="max-w-4xl mx-auto px-4 py-16 text-center">
             <div className="text-5xl mb-4">😕</div>
-            <h1 className="text-3xl font-bold mb-4">Blog Not Found</h1>
-            <p className="text-gray-400 mb-6">
-              The blog post you're looking for doesn't exist or has been removed.
-            </p>
+            <h1 className="text-3xl font-bold mb-4">{t.notFound}</h1>
+            <p className="text-gray-400 mb-6">{t.notFoundMessage}</p>
             <Link
-              href="/blogs"
+              href={`/${lang}/blogs`}
               className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-700 hover:to-purple-700 transition duration-200"
             >
-              <ArrowLeft className="w-5 h-5" />
-              <span>Browse All Blogs</span>
+              {lang === 'ar' ? <ChevronRight className="w-5 h-5" /> : <ArrowLeft className="w-5 h-5" />}
+              <span>{t.browseBlogs}</span>
             </Link>
           </div>
         </div>
@@ -498,25 +592,58 @@ const BlogDetailClientComponent = ({ slug }) => {
     );
   }
 
-  
+  // SEO data
+  const seoData = {
+    title: `${blog.title} | ${lang === 'ar' ? 'ملخصات الكتب' : 'Book Summaries'}`,
+    description: blog.excerpt || blog.aiResponse?.substring(0, 160) || (lang === 'ar' ? 'ملخص كتاب مدعوم بالذكاء الاصطناعي' : 'AI-powered book summary'),
+    image: blog.bookDetails?.thumbnail || '/default-og.png',
+    url: typeof window !== 'undefined' ? window.location.href : '',
+    author: blog.user?.username || 'Anonymous',
+    publishedTime: blog.createdAt,
+    category: blog.category || 'Uncategorized',
+    readingTime: readingTime,
+    keywords: blog.tags?.join(', ') || `${blog.category || ''}, book summary, AI summary, ${lang === 'ar' ? 'ملخص, قراءة' : 'reading, books'}`
+  };
+
   return (
     <>
-      <Head>
-        <title>{blog.title} - Book Summaries & Reviews</title>
-        <meta name="description" content={blog.excerpt || blog.aiResponse?.substring(0, 160) || "Book summary and review"} />
-        <meta property="og:title" content={blog.title} />
-        <meta property="og:description" content={blog.excerpt || ""} />
-        <meta property="og:image" content={blog.bookDetails?.thumbnail || "/default-og.png"} />
-        <meta property="og:type" content="article" />
-        <meta property="article:published_time" content={blog.createdAt} />
-        <meta property="article:author" content={blog.user?.username || "Anonymous"} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={blog.title} />
-        <meta name="twitter:description" content={blog.excerpt || ""} />
-        <meta name="twitter:image" content={blog.bookDetails?.thumbnail || "/default-og.png"} />
-      </Head>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": blog.title,
+          "description": seoData.description,
+          "image": seoData.image,
+          "author": {
+            "@type": "Person",
+            "name": seoData.author
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": lang === 'ar' ? 'ملخصات الكتب' : 'Book Summaries',
+            "logo": {
+              "@type": "ImageObject",
+              "url": "/logo.png"
+            }
+          },
+          "datePublished": blog.createdAt,
+          "dateModified": blog.updatedAt || blog.createdAt,
+          "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": seoData.url
+          },
+          "articleSection": seoData.category,
+          "keywords": seoData.keywords,
+          "timeRequired": `PT${readingTime}M`,
+          "wordCount": (blog.content || '').split(/\s+/).length
+        })
+      }}
+    />
+    
       
-      <Header />
+      <Header lang={lang} />
       
       {/* Reading Progress Bar */}
       <div 
@@ -529,16 +656,25 @@ const BlogDetailClientComponent = ({ slug }) => {
         aria-valuemax="100"
       />
 
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white pt-20">
+      <div className={`min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white pt-20 ${lang === 'ar' ? 'font-arabic' : 'font-sans'}`}>
         <div className="max-w-6xl mx-auto px-4">
           {/* Back Navigation */}
           <div className="mb-6">
             <Link
-              href="/blogs"
+              href={`/${lang}/blogs`}
               className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition duration-200 group"
             >
-              <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-              <span>Back to All Blogs</span>
+              {lang === 'ar' ? (
+                <>
+                  <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <span>{t.backToBlogs}</span>
+                </>
+              ) : (
+                <>
+                  <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                  <span>{t.backToBlogs}</span>
+                </>
+              )}
             </Link>
           </div>
 
@@ -553,7 +689,7 @@ const BlogDetailClientComponent = ({ slug }) => {
                     <div className="relative aspect-[2/3] rounded-xl overflow-hidden shadow-2xl bg-gray-800">
                       <Image
                         src={blog.bookDetails?.thumbnail}
-                        alt={blog.bookDetails?.title || 'Book cover'}
+                        alt={blog.bookDetails?.title || (lang === 'ar' ? 'غلاف الكتاب' : 'Book cover')}
                         fill
                         priority
                         className={`object-cover transition duration-500 ${
@@ -565,7 +701,6 @@ const BlogDetailClientComponent = ({ slug }) => {
                         blurDataURL="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='450' viewBox='0 0 300 450'%3E%3Crect width='300' height='450' fill='%231f2937'/%3E%3Crect x='50' y='50' width='200' height='350' fill='%23374151'/%3E%3C/svg%3E"
                       />
                     </div>
-                    
                   </div>
                 </div>
 
@@ -578,7 +713,7 @@ const BlogDetailClientComponent = ({ slug }) => {
                     </span>
                     <div className="flex items-center gap-2 text-sm text-gray-400">
                       <Clock className="w-4 h-4" />
-                      <span>{readingTime} min read</span>
+                      <span>{readingTime} {t.readingTime}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-400">
                       <Calendar className="w-4 h-4" />
@@ -596,30 +731,30 @@ const BlogDetailClientComponent = ({ slug }) => {
                     <div className="mb-6 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
                       <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
                         <BookOpen className="w-5 h-5" />
-                        Book Information
+                        {t.bookInfo}
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <p className="text-gray-300">
-                          <span className="font-medium text-gray-400">Title:</span> {blog.bookDetails.title}
+                          <span className="font-medium text-gray-400">{t.title}:</span> {blog.bookDetails.title}
                         </p>
                         {blog.bookDetails.author && (
                           <p className="text-gray-300">
-                            <span className="font-medium text-gray-400">Author:</span> {blog.bookDetails.author}
+                            <span className="font-medium text-gray-400">{t.author}:</span> {blog.bookDetails.author}
                           </p>
                         )}
                         {blog.bookDetails.publishedYear && (
                           <p className="text-gray-300">
-                            <span className="font-medium text-gray-400">Published:</span> {blog.bookDetails.publishedYear}
+                            <span className="font-medium text-gray-400">{t.published}:</span> {blog.bookDetails.publishedYear}
                           </p>
                         )}
                         {blog.bookDetails.pageCount && (
                           <p className="text-gray-300">
-                            <span className="font-medium text-gray-400">Pages:</span> {blog.bookDetails.pageCount}
+                            <span className="font-medium text-gray-400">{t.pages}:</span> {blog.bookDetails.pageCount}
                           </p>
                         )}
                         {blog.bookDetails.genre && (
                           <p className="text-gray-300">
-                            <span className="font-medium text-gray-400">Genre:</span> {blog.bookDetails.genre}
+                            <span className="font-medium text-gray-400">{t.genre}:</span> {blog.bookDetails.genre}
                           </p>
                         )}
                       </div>
@@ -636,7 +771,7 @@ const BlogDetailClientComponent = ({ slug }) => {
                       </div>
                       <div>
                         <p className="font-medium">{blog.user?.username || 'Anonymous'}</p>
-                        <p className="text-sm text-gray-400">Author</p>
+                        <p className="text-sm text-gray-400">{t.author}</p>
                       </div>
                     </div>
 
@@ -648,19 +783,19 @@ const BlogDetailClientComponent = ({ slug }) => {
                             ? 'bg-red-900/30 text-red-400'
                             : 'bg-gray-800 hover:bg-gray-700'
                         }`}
-                        aria-label="Like this post"
+                        aria-label={lang === 'ar' ? "أعجبني" : "Like this post"}
                         title="Alt + L to like"
                       >
                         <Heart className={`w-5 h-5 ${blog.liked ? 'fill-red-400' : ''}`} />
                         <span className="font-medium">{blog.likesCount || 0}</span>
                       </button>
 
-                      <div className="flex items-center gap-2 px-4 py-2 bg-gray-800 rounded-lg" aria-label="Views">
+                      <div className="flex items-center gap-2 px-4 py-2 bg-gray-800 rounded-lg" aria-label={t.views}>
                         <Eye className="w-5 h-5 text-gray-400" />
                         <span className="font-medium">{blog.views || 0}</span>
                       </div>
 
-                      <div className="flex items-center gap-2 px-4 py-2 bg-gray-800 rounded-lg" aria-label="Comments">
+                      <div className="flex items-center gap-2 px-4 py-2 bg-gray-800 rounded-lg" aria-label={t.commentsCount}>
                         <MessageCircle className="w-5 h-5 text-gray-400" />
                         <span className="font-medium">{blog.commentsCount || 0}</span>
                       </div>
@@ -673,14 +808,14 @@ const BlogDetailClientComponent = ({ slug }) => {
                       <button
                         onClick={() => setShowShareMenu(!showShareMenu)}
                         className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition duration-200"
-                        aria-label="Share options"
+                        aria-label={t.share}
                       >
                         <Share2 className="w-5 h-5" />
-                        <span>Share</span>
+                        <span>{t.share}</span>
                       </button>
                       
                       {showShareMenu && (
-                        <div className="absolute left-0 mt-2 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50">
+                        <div className={`absolute ${lang === 'ar' ? 'right-0' : 'left-0'} mt-2 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50`}>
                           <div className="p-2">
                             <button
                               onClick={() => {
@@ -722,20 +857,20 @@ const BlogDetailClientComponent = ({ slug }) => {
                       <button
                         onClick={() => setShowExportMenu(!showExportMenu)}
                         className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition duration-200"
-                        aria-label="Export options"
+                        aria-label={t.export}
                       >
                         <Download className="w-5 h-5" />
-                        <span>Export</span>
+                        <span>{t.export}</span>
                       </button>
                       
                       {showExportMenu && (
-                        <div className="absolute left-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50">
+                        <div className={`absolute ${lang === 'ar' ? 'right-0' : 'left-0'} mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50`}>
                           <button
                             onClick={() => handleExport('print')}
                             className="w-full px-4 py-3 text-left hover:bg-gray-700 rounded-t-lg flex items-center gap-3"
                           >
                             <Printer className="w-4 h-4" />
-                            Print
+                            <span>{t.print}</span>
                           </button>
                         </div>
                       )}
@@ -769,7 +904,7 @@ const BlogDetailClientComponent = ({ slug }) => {
               <div className="mb-12" id="ai-summary">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-3 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
-                  <h2 className="text-2xl font-bold">AI Summary</h2>
+                  <h2 className="text-2xl font-bold">{t.aiSummary}</h2>
                 </div>
                 <div className="p-6 bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-xl border border-gray-700">
                   <div className="prose prose-lg prose-invert max-w-none text-gray-200 leading-relaxed">
@@ -786,7 +921,7 @@ const BlogDetailClientComponent = ({ slug }) => {
               <div className="mb-12">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-3 h-8 bg-gradient-to-b from-green-500 to-blue-500 rounded-full"></div>
-                  <h2 className="text-2xl font-bold">Full Analysis</h2>
+                  <h2 className="text-2xl font-bold">{t.fullAnalysis}</h2>
                 </div>
                 <div className="p-6 bg-gray-800/30 rounded-xl border border-gray-700">
                   <div className="prose prose-lg prose-invert max-w-none text-gray-300 leading-relaxed">
@@ -803,14 +938,14 @@ const BlogDetailClientComponent = ({ slug }) => {
               <div className="mb-12" id="comments">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-3 h-8 bg-gradient-to-b from-yellow-500 to-orange-500 rounded-full"></div>
-                  <h2 className="text-2xl font-bold">Comments ({blog.commentsCount || 0})</h2>
+                  <h2 className="text-2xl font-bold">{t.comments} ({blog.commentsCount || 0})</h2>
                 </div>
 
                 {/* Add Comment Form */}
                 <div className="mb-8 p-6 bg-gray-800/30 rounded-xl border border-gray-700">
                   <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                     <MessageCircle className="w-5 h-5" />
-                    Add Your Comment
+                    {t.addComment}
                   </h3>
                   <form onSubmit={handleSubmitComment}>
                     <div className="mb-4">
@@ -818,9 +953,9 @@ const BlogDetailClientComponent = ({ slug }) => {
                         type="text"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        placeholder="Your name (optional)"
+                        placeholder={t.namePlaceholder}
                         className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                        aria-label="Your name"
+                        aria-label={t.namePlaceholder}
                         title="Press Alt + C to focus"
                       />
                     </div>
@@ -832,12 +967,12 @@ const BlogDetailClientComponent = ({ slug }) => {
                           onClick={() => setShowMarkdownHelp(!showMarkdownHelp)}
                           className="text-sm text-blue-400 hover:text-blue-300"
                         >
-                          {showMarkdownHelp ? 'Hide Help' : 'Need help?'}
+                          {showMarkdownHelp ? t.hideHelp : t.markdownHelp}
                         </button>
                       </div>
                       {showMarkdownHelp && (
                         <div className="mb-3 p-3 bg-gray-900/50 rounded-lg text-sm">
-                          <p className="text-gray-400 mb-2">Formatting help:</p>
+                          <p className="text-gray-400 mb-2">{t.formattingHelp}</p>
                           <ul className="space-y-1 text-gray-500">
                             <li><code>**bold**</code> → <strong>bold</strong></li>
                             <li><code>*italic*</code> → <em>italic</em></li>
@@ -849,10 +984,11 @@ const BlogDetailClientComponent = ({ slug }) => {
                       <textarea
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
-                        placeholder="Share your thoughts about this book summary... (Markdown supported)"
+                        placeholder={t.commentPlaceholder}
                         rows="4"
                         className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono text-sm"
-                        aria-label="Your comment"
+                        aria-label={t.commentPlaceholder}
+                        maxLength="5000"
                       />
                     </div>
                     <div className="flex items-center justify-between">
@@ -860,13 +996,13 @@ const BlogDetailClientComponent = ({ slug }) => {
                         type="submit"
                         disabled={submittingComment || !comment.trim()}
                         className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-700 hover:to-purple-700 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                        aria-label="Post comment"
+                        aria-label={t.postComment}
                       >
                         <Send className="w-4 h-4" />
-                        {submittingComment ? 'Posting...' : 'Post Comment'}
+                        {submittingComment ? t.posting : t.postComment}
                       </button>
                       <span className="text-sm text-gray-400">
-                        {comment.length}/5000 characters
+                        {comment.length}/5000 {t.characters}
                       </span>
                     </div>
                   </form>
@@ -890,14 +1026,14 @@ const BlogDetailClientComponent = ({ slug }) => {
                             <div>
                               <p className="font-medium">{comment.username || 'Anonymous'}</p>
                               <p className="text-sm text-gray-400">
-                                {new Date(comment.timestamp || comment.createdAt).toLocaleDateString()}
+                                {new Date(comment.timestamp || comment.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}
                               </p>
                             </div>
                           </div>
                           <button
                             onClick={() => copyToClipboard(comment.content, 'code')}
                             className="p-2 text-gray-400 hover:text-white"
-                            aria-label="Copy comment"
+                            aria-label={lang === 'ar' ? "نسخ التعليق" : "Copy comment"}
                           >
                             <Copy className="w-4 h-4" />
                           </button>
@@ -910,8 +1046,8 @@ const BlogDetailClientComponent = ({ slug }) => {
                   ) : (
                     <div className="text-center py-12 text-gray-400 border-2 border-dashed border-gray-800 rounded-xl">
                       <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p className="text-lg">No comments yet.</p>
-                      <p className="text-sm mt-2">Be the first to share your thoughts!</p>
+                      <p className="text-lg">{t.noComments}</p>
+                      <p className="text-sm mt-2">{t.beFirst}</p>
                     </div>
                   )}
                 </div>
@@ -922,22 +1058,22 @@ const BlogDetailClientComponent = ({ slug }) => {
                 <div className="mb-12">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-3 h-8 bg-gradient-to-b from-pink-500 to-red-500 rounded-full"></div>
-                    <h2 className="text-2xl font-bold">Related Summaries</h2>
+                    <h2 className="text-2xl font-bold">{t.relatedSummaries}</h2>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {blog.relatedBlogs.map((relatedBlog) => (
                       <Link
                         key={relatedBlog._id}
-                        href={`/blogs/${relatedBlog.slug}`}
+                        href={`/${lang}/blogs/${relatedBlog.slug}`}
                         className="group"
-                        aria-label={`Read ${relatedBlog.title}`}
+                        aria-label={`${t.readSummary}: ${relatedBlog.title}`}
                       >
                         <div className="p-6 bg-gray-800/30 rounded-xl border border-gray-700 hover:border-blue-500 transition duration-300 hover:shadow-xl hover:shadow-blue-900/10">
                           <h3 className="text-lg font-semibold mb-2 group-hover:text-blue-400 transition duration-200 line-clamp-2">
                             {relatedBlog.title}
                           </h3>
                           <p className="text-sm text-gray-400 mb-3">
-                            {new Date(relatedBlog.createdAt).toLocaleDateString()}
+                            {new Date(relatedBlog.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}
                           </p>
                           <p className="text-sm text-gray-300 line-clamp-2">
                             {relatedBlog.excerpt || ''}
@@ -960,8 +1096,8 @@ const BlogDetailClientComponent = ({ slug }) => {
       {showBackToTop && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-8 right-8 p-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 z-40 group"
-          aria-label="Back to top"
+          className={`fixed bottom-8 ${lang === 'ar' ? 'left-8' : 'right-8'} p-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 z-40 group`}
+          aria-label={lang === 'ar' ? "العودة للأعلى" : "Back to top"}
         >
           <ChevronUp className="w-6 h-6 group-hover:-translate-y-1 transition-transform" />
         </button>

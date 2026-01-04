@@ -1,0 +1,50 @@
+{
+  "common": {
+    "home": "الرئيسية",
+    "about": "من نحن",
+    "contact": "اتصل بنا",
+    "privacyPolicy": "الخصوصية",
+    "blog": "المدونة"
+  },
+  "home": {
+    "title": "ملخص الكتب",
+    "subtitle": "رؤى الكتب بالذكاء الاصطناعي",
+    "libraryTitle": "ملخص الكتب",
+    "librarySubtitle": "اكتشف واقرأ واستكشف الآلاف من الكتب مع ملخصات مدعومة بالذكاء الاصطناعي",
+    "search": "ابحث عن كتاب",
+    "upload": "رفع ملف PDF",
+    "categories": "التصنيفات",
+    "placeholder": "اكتب اسم الكتاب...",
+    "submit": "تأكيد",
+    "searchResults": "نتائج البحث",
+    "uploadResults": "ملخص PDF",
+    "categoryBooks": "كتب في",
+    "buyLink": "شراء هذا الكتاب",
+    "recommendations": "التوصيات",
+    "loading": "جاري التحميل...",
+    "error": "خطأ",
+    "selectCategory": "اختر تصنيفاً",
+    "noFileSelected": "لم يتم اختيار ملف",
+    "selectFile": "اختر ملف PDF",
+    "summary": "ملخص",
+    "by": "بواسطة",
+    "quickActions": "إجراءات سريعة",
+    "popularCategories": "التصنيفات الشائعة",
+    "recentlyAdded": "المضاف حديثاً",
+    "trendingNow": "الأكثر شهرة الآن",
+    "processing": "جاري المعالجة...",
+    "searching": "جاري البحث",
+    "finalizing": "جاري الانتهاء",
+    "copySummary": "نسخ الملخص",
+    "downloadSummary": "تحميل الملخص",
+    "saveForLater": "حفظ للمستقبل",
+    "waiting": "في الانتظار...",
+    "complete": "اكتمل!",
+    "tryAgain": "حاول مرة أخرى"
+  },
+  "seo": {
+    "title": "ملخص الكتب - احصل على ملخصات ذكية للكتب",
+    "description": "احصل على ملخصات ذكية ومفصلة للكتب باستخدام الذكاء الاصطناعي",
+    "keywords": "ملخص كتب، ذكاء اصطناعي، قراءة، تعلم"
+  }
+}

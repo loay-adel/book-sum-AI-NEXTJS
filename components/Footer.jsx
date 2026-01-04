@@ -1,10 +1,7 @@
-"use client";
+// components/Footer.jsx
 import Link from "next/link";
-import { useLanguage } from "@/lib/context/LanguageContext";
 
-const Footer = () => {
-  const { lang } = useLanguage();
-
+const Footer = ({ lang }) => {
   const content = {
     en: {
       poweredBy: "Powered by OpenAI",
@@ -16,15 +13,17 @@ const Footer = () => {
     },
   };
 
+  const currentContent = content[lang] || content.en;
+
   return (
-    <footer className="w-full py-4 px-4 bg-gray-900 border-t border-gray-800">
+    <footer className="w-full py-4 px-4 bg-gray-900 border-t border-gray-800 mt-auto">
       <div className="container mx-auto text-center">
         <p
           className={`text-sm text-gray-400 ${
             lang === "ar" ? "font-arabic" : ""
           }`}
         >
-          {content[lang].poweredBy} • {content[lang].madeBy}{" "}
+          {currentContent.poweredBy} • {currentContent.madeBy}{" "}
           <Link
             href="mailto:loay-adel@outlook.com"
             className="text-blue-400 hover:text-blue-300 transition-colors underline"

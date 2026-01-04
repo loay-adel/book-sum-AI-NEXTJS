@@ -1,4 +1,3 @@
-// next.config.mjs
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -13,34 +12,23 @@ const nextConfig = {
         hostname: 'via.placeholder.com',
         pathname: '/**',
       },
-            {
+      {
         protocol: 'https',
         hostname: 'dummyimage.com',
         pathname: '/**',
       },
-
       {
         protocol: 'https',
-        hostname: 'https://api.booksummarizer.net',
+        hostname: 'api.booksummarizer.net',
         pathname: '/**',
       },
     ],
-    unoptimized: false, // Keep as false for optimization, but ensure domains are allowed
+    unoptimized: false,
   },
   
-  // Disable trailing slash for better API routing
   trailingSlash: false,
-  
-  // Keep other configurations
   compress: true,
-  swcMinify: true,
   
-  i18n: {
-    locales: ['en', 'ar'],
-    defaultLocale: 'en',
-    localeDetection: true,
-  },
-
   async headers() {
     return [
       {
